@@ -18,11 +18,18 @@ cd auto-lrc
 
 # 模型检查点需要 Git LFS
 git lfs install
+git lfs pull
 
 pip install -r requirements.txt
 ```
 
 > 推荐使用 Python 3.9 / 3.10。项目依赖 PyTorch 和 Demucs，建议使用 GPU 以获得合理的运行速度。
+
+运行不加载检查点、不下载 Demucs 模型的轻量 CPU 回归测试：
+
+```bash
+python -m pytest -q
+```
 
 ## 快速开始
 
@@ -38,7 +45,7 @@ python main.py demofile/original_txt.txt demofile/original_track.mp3
 python main.py <歌词文件> <音频文件> [选项]
 
 选项：
-  -f, --format     输出格式：lrc（默认）或 srt
+  -f, --format     输出格式：仅支持 lrc（默认）
   -l, --line_only  1 = 逐句时间戳，0 = 逐字时间戳（默认）
   -v, --vocalize   1 = 通过 Demucs 分离人声（默认），0 = 跳过
   -m, --model      Demucs 模型：mdx | mdx_extra（默认）| mdx_q | mdx_extra_q
@@ -83,6 +90,8 @@ lrc = process(
 )
 print(lrc)
 ```
+
+`format` 参数当前仅接受 `"lrc"`，其他值会抛出 `ValueError`。直接对齐多声道原始音频（`vocalize=False`）时，为兼容既有输出并避免声道首尾串接，程序使用第一个声道。
 
 如需避免多次调用时重复加载模型，可使用 `t2l.init_model`：
 
@@ -150,7 +159,7 @@ lrc2 = process(lines2, "song2.mp3", mtl_model=model)
 CLI 产生两种输出：
 
 1. **增强型 LRC** — 打印到终端，含逐字 `<mm:ss.xxx>` 时间戳，用于精细对齐
-2. **标准 LRC** — 保存到 `demofile/`（或 `-o` 指定的目录），仅含行级 `[mm:ss.xxx>]` 时间戳，兼容标准 LRC 播放器
+2. **标准 LRC** — 保存到 `demofile/`（或 `-o` 指定的目录），仅含行级 `[mm:ss.xxx]` 时间戳，兼容标准 LRC 播放器
 
 标准 LRC 文件名取自音频文件名，例如 `song.mp3` → `demofile/song.lrc`。
 

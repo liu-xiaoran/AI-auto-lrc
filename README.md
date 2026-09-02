@@ -18,11 +18,20 @@ cd auto-lrc
 
 # Git LFS is required for model checkpoints
 git lfs install
+git lfs pull
 
 pip install -r requirements.txt
 ```
 
 > Python 3.9 / 3.10 is recommended. The project requires PyTorch and Demucs, so GPU support is recommended for reasonable performance.
+
+Run the lightweight CPU-only regression suite with:
+
+```bash
+python -m pytest -q
+```
+
+The tests use synthetic data and do not load checkpoints or download Demucs models.
 
 ## Quick Start
 
@@ -38,7 +47,7 @@ This runs the full pipeline with default settings: word-level alignment, Demucs 
 python main.py <lyrics_file> <audio_file> [options]
 
 Options:
-  -f, --format     Output format: lrc (default) or srt
+  -f, --format     Output format: lrc only (default)
   -l, --line_only  1 = line-level timestamps, 0 = word-level (default)
   -v, --vocalize   1 = separate vocals via Demucs (default), 0 = skip
   -m, --model      Demucs model: mdx | mdx_extra (default) | mdx_q | mdx_extra_q
@@ -83,6 +92,8 @@ lrc = process(
 )
 print(lrc)
 ```
+
+The `format` argument currently accepts only `"lrc"`; unsupported values raise `ValueError`. When alignment runs directly on multichannel audio (`vocalize=False`), the first channel is used for compatibility with earlier output while avoiding channel concatenation.
 
 To avoid repeated model loading across multiple calls, use `t2l.init_model`:
 

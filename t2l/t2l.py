@@ -1,6 +1,7 @@
 import logging
 import re
 
+import audioread
 import julius
 from .mtl import utils as mtl_utils
 import torch
@@ -8,11 +9,15 @@ import torchaudio as ta
 from demucs import pretrained as demucs_pretrained
 from demucs.apply import apply_model as demucs_apply_model
 from .mtl.wrapper import align
-from .phonetic import phonetize
 import warnings
 import librosa
 
 logger = logging.getLogger("t2l")
+
+
+def phonetize(text):
+    from .phonetic import phonetize as convert
+    return convert(text)
 
 
 def process(txt_lines, audio_file, mtl_model='MTL',
@@ -23,12 +28,17 @@ def process(txt_lines, audio_file, mtl_model='MTL',
     :mtl_model: tuple of pre loaded model, or one of string: "Baseline", "MTL", "Baseline_BDR", "MTL_BDR"
     :return: lrc resutl. TxtValueError if txt_lines invalid, AudioValueError if audio error
     """
+    if format != 'lrc':
+        raise ValueError(
+            "Unsupported format {!r}; only 'lrc' is implemented.".format(format)
+        )
+
     # filter lyric words and phonetize. FIXME: 如何处理数字
     phonetics, lines, pre_lines_unprocessed = [], [], ''  # [[读音],..], [[文字],..]
     for line in txt_lines:
         line = line.strip()
-        line = re.sub('^\[[\d\.:]+\]\s*', '', line)  # 去除已打的时间戳
-        line = re.sub('^\[[a-zA-Z]{2}:.+\]\s*', '',
+        line = re.sub(r'^\[[\d.:]+\]\s*', '', line)  # 去除已打的时间戳
+        line = re.sub(r'^\[[a-zA-Z]{2}:.+\]\s*', '',
                       line)  # 去除 [ar/au/al/ti:...]
         phonetic, words = [], []
         # 转读音
@@ -68,7 +78,6 @@ def process(txt_lines, audio_file, mtl_model='MTL',
     if len(lines) == 0:
         raise TxtValueError('Invalid lrc file, no valid content.')
 
-    # `format` is accepted for CLI compatibility. Only LRC output is implemented.
     if vocalize:
         vocals, _ = separate_vocals(
             audio_file, demucs_model=demucs_model,
@@ -81,25 +90,10 @@ def process(txt_lines, audio_file, mtl_model='MTL',
     # raw_lines = [" ".join(line) for line in phonetics]
     # raw_words = " ".join(raw_lines).split()
     lyrics_p, _, idx_word_p, idx_line_p = mtl_utils.gen_phone_gt_opt(phonetics)
-    word_align, words = None, None
-    try:
-        word_align, words = align(
-            vocals, None, lyrics_p, idx_word_p, idx_line_p, method=mtl_model, cuda=True, verbose=verbose)
-    finally:
-        if torch.cuda.is_available():
-            try:
-                torch.cuda.empty_cache()
-            except:
-                pass
-    lrc_content = None
-    try:
-        lrc_content = gen_lrc(word_align, lines, line_only=line_only)
-    finally:
-        if torch.cuda.is_available():
-            try:
-                torch.cuda.empty_cache()
-            except:
-                pass
+    word_align, words = align(
+        vocals, None, lyrics_p, idx_word_p, idx_line_p,
+        method=mtl_model, cuda=True, verbose=verbose)
+    lrc_content = gen_lrc(word_align, lines, line_only=line_only)
     if len(pre_lines_unprocessed) > 0:
         lrc_content = pre_lines_unprocessed + '\n' + lrc_content
 
@@ -107,7 +101,7 @@ def process(txt_lines, audio_file, mtl_model='MTL',
     # lrc_out = lrc + '.lrc'
     if out_file:
         verbose and print('write to lrc file:', out_file)
-        with open(out_file, 'w') as f:
+        with open(out_file, 'w', encoding='utf-8') as f:
             f.write(lrc_content)
         # write_csv(lrc_out, word_align, words)
 
@@ -123,19 +117,9 @@ class AudioValueError(ValueError):
 
 
 def separate_vocals(audio_file, sample_rate=22050, demucs_model='mdx_extra', demucs_idx=-1, verbose=True):
-    try:
-        x, sr = preprocess_audio(audio_file)
-        vocals, sr = __vocalize(
-            x, sr, sample_rate, demucs_model, demucs_idx, verbose)
-        return vocals, sr
-    except Exception as err:
-        raise AudioValueError(err)
-    finally:
-        if torch.cuda.is_available():
-            try:
-                torch.cuda.empty_cache()
-            except:
-                pass
+    x, sr = preprocess_audio(audio_file)
+    return __vocalize(
+        x, sr, sample_rate, demucs_model, demucs_idx, verbose)
 
 
 def vocalize(audio_file, sample_rate=22050, demucs_model='mdx_extra', demucs_idx=-1, verbose=True):
@@ -152,24 +136,44 @@ def preprocess_audio(audio_file, sr=None):
     """
     :returns: np/tensor array
     """
+    torchaudio_error = None
     try:
         y, sr1 = ta.load(audio_file)
-    except RuntimeError:
+    except (RuntimeError, OSError) as err:
+        torchaudio_error = err
         logger.info(
-            'ERROR: torchaudio.load fail: %s, retry with librosa.', audio_file)
-        y = torch.tensor([])
+            'torchaudio.load failed for %s; retrying with librosa.',
+            audio_file)
+        y = None
 
+    if y is None or y.numel() == 0:
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                y, sr1 = librosa.load(
+                    audio_file, sr=sr, res_type='kaiser_fast')
+        except (RuntimeError, OSError, ValueError, EOFError,
+                audioread.exceptions.DecodeError) as err:
+            message = (
+                "Unable to load audio {!r} with torchaudio and librosa."
+                .format(audio_file)
+            )
+            if torchaudio_error is not None:
+                message += " torchaudio error: {}.".format(torchaudio_error)
+            raise AudioValueError(message) from err
+
+    if not isinstance(y, torch.Tensor):
+        y = torch.as_tensor(y)
     if y.numel() == 0:
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            y, sr1 = librosa.load(audio_file, sr=sr, res_type='kaiser_fast')
+        raise AudioValueError("Audio file {!r} is empty.".format(audio_file))
 
     if sr is not None and sr1 != sr:
         y = julius.resample_frac(y, sr1, sr)
-    else: sr = sr1
+    else:
+        sr = sr1
 
-    if len(y.shape) == 1:
-        y = y[None, :]  # (channel, sample)
+    if y.ndim == 1:
+        y = y.unsqueeze(0)  # (channel, sample)
 
     return y, sr
 
@@ -200,8 +204,9 @@ def __vocalize(x, sr, new_sr, demucs_model, demucs_idx, verbose):
     # x = (x - ref.mean()) / ref.std()
     if x.shape[0] == 1:
         x = x.expand((2,) + x.shape[1:])
-    out = demucs_apply_model(
-        model, x[None], device=device, progress=verbose)[0]
+    with torch.inference_mode():
+        out = demucs_apply_model(
+            model, x[None], device=device, progress=verbose)[0]
     # out = out * ref.std() + ref.mean()
 
     for name, source in zip(model.sources, out):

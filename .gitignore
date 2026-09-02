@@ -1,9 +1,11 @@
 **/__pycache__
+.claude/worktrees/
+.pytest_cache/
+.coverage
+htmlcov/
 .ipynb_checkpoints
-test*
 generate
 .idea
 .vscode
 demofile/mdx_q
 demofile/mdx_extra
-

@@ -7,11 +7,82 @@ import numpy as np
 import librosa
 import string
 import warnings
-from g2p_en import G2p
 import logging
 
-g2p = G2p()
+
+g2p = None
 logger = logging.getLogger("mtl")
+
+
+def _get_g2p():
+    global g2p
+    if g2p is None:
+        from g2p_en import G2p
+        g2p = G2p()
+    return g2p
+
+
+class AlignmentValueError(ValueError):
+    """Raised when alignment inputs cannot form a valid DTW path."""
+
+
+def _validate_alignment_inputs(song_pred, lyrics_length, idx,
+                               bdr_pred=None, line_start=None):
+    pred_shape = tuple(song_pred.shape)
+    if len(pred_shape) != 2 or pred_shape[1] <= 40:
+        raise AlignmentValueError(
+            "Phoneme posterior must have shape [audio_frames, classes] with "
+            "at least 41 classes; received {}.".format(pred_shape)
+        )
+
+    audio_length = pred_shape[0]
+    required_frames = lyrics_length + 2
+    if lyrics_length < 1:
+        raise AlignmentValueError("Cannot align empty phoneme lyrics.")
+    if audio_length < required_frames:
+        raise AlignmentValueError(
+            "Cannot align {} phonemes to {} audio frames; at least {} "
+            "audio frames are required.".format(
+                lyrics_length, audio_length, required_frames)
+        )
+
+    idx_array = np.asarray(idx)
+    if (idx_array.ndim != 2 or idx_array.shape[0] < 1 or
+            idx_array.shape[1] != 2):
+        raise AlignmentValueError(
+            "Word alignment indices must be non-empty [start, end) pairs "
+            "within the phoneme sequence."
+        )
+
+    starts = idx_array[:, 0]
+    ends = idx_array[:, 1]
+    if (np.any(starts < 0) or np.any(starts >= lyrics_length) or
+            np.any(ends <= starts) or np.any(ends > lyrics_length)):
+        raise AlignmentValueError(
+            "Word alignment indices must be non-empty [start, end) pairs "
+            "within the phoneme sequence."
+        )
+    if (len(idx_array) > 1 and
+            np.any(starts[1:] < ends[:-1])):
+        raise AlignmentValueError(
+            "Word alignment indices must be ordered and non-overlapping."
+        )
+
+    if bdr_pred is not None:
+        bdr_array = np.asarray(bdr_pred).reshape(-1)
+        if len(bdr_array) < audio_length:
+            raise AlignmentValueError(
+                "Boundary prediction has {} frames, but {} audio frames are "
+                "required.".format(len(bdr_array), audio_length)
+            )
+
+    if line_start is not None:
+        line_start_array = np.asarray(line_start).reshape(-1)
+        if (np.any(line_start_array < 0) or
+                np.any(line_start_array >= lyrics_length)):
+            raise AlignmentValueError(
+                "Line-start indices must be within the phoneme sequence."
+            )
 
 
 phone_dict = ['AA', 'AE', 'AH', 'AO', 'AW', 'AY', 'B', 'CH', 'D', 'DH', 'EH', 'ER', 'EY', 'F', 'G', 'HH', 'IH', 'IY',
@@ -95,6 +166,8 @@ def gen_phone_gt_opt(phonetics):
     optimization of mtl.utils.gen_phone_gt
     :param phonetics: [[word, ..], ..]
     """
+    g2p = _get_g2p()
+
     def g2p_ndigit(word):
         phones = g2p(word)
         return list(map(lambda phone: phone if phone[-1] not in string.digits else phone[:-1], phones))
@@ -119,6 +192,7 @@ def gen_phone_gt_opt(phonetics):
 
 
 def gen_phone_gt(words, raw_lines):
+    g2p = _get_g2p()
 
     # helper function
     def getsubidx(x, y):  # find y in x
@@ -220,14 +294,12 @@ def move_data_to_device(x, device):
     return x.to(device)
 
 def alignment(song_pred, lyrics, idx):
-    audio_length, _ = song_pred.shape
     lyrics_int = phone2seq(lyrics)
-    lyrics_int = torch.tensor(lyrics_int, device=song_pred.device, dtype=torch.long)
     lyrics_length = len(lyrics_int)
-
-    if audio_length < 2 or lyrics_length < 1:
-        logger.warning('audio_length(%s) < 2 or lyrics_length(%s) < 1, return empty alignment', audio_length, lyrics_length)
-        return [], -np.Inf
+    _validate_alignment_inputs(song_pred, lyrics_length, idx)
+    audio_length, _ = song_pred.shape
+    lyrics_int = torch.tensor(
+        lyrics_int, device=song_pred.device, dtype=torch.long)
 
     # s = np.zeros((audio_length, 2*lyrics_length+1)) - np.Inf
     # opt = np.zeros((audio_length, 2*lyrics_length+1), dtype=np.int8)
@@ -264,12 +336,6 @@ def alignment(song_pred, lyrics, idx):
     _, s_h = s1.shape
     s_view = s1.view(-1)
     # s[j+1][2*j+1] = s[j][2*j-1] + song_pred[j+1][lyrics_int[j]]
-    print(f"lyrics_length: {lyrics_length}, s_h: {s_h}")
-    print(f"LHS slice size: {len(range(2*s_h+4, lyrics_length*(s_h+2)+1, s_h+2))}")
-    print(f"RHS size: {lyrics_length-1}")
-    print(f"s_view shape: {s_view.shape}")
-    print(f"song_pred shape: {song_pred.shape}")
-    print(f"s1 shape: {s1.shape}")
     s_view[2*s_h+4:lyrics_length*(s_h+2)+1:s_h+2] = song_pred[range(
         2, lyrics_length+1), lyrics_int[1:lyrics_length]].cumsum(0)+s1[1, 2]
     # s[j+2][2*j+2] = s[j+1][2*j+1] + song_pred[j+2][blank]
@@ -387,9 +453,14 @@ def alignment(song_pred, lyrics, idx):
     return word_align, score
 
 def alignment_bdr(song_pred, lyrics, idx, bdr_pred, line_start):
-    audio_length, num_class = song_pred.shape
+    song_pred = np.asarray(song_pred)
+    bdr_pred = np.asarray(bdr_pred).reshape(-1)
     lyrics_int = phone2seq(lyrics)
     lyrics_length = len(lyrics_int)
+    _validate_alignment_inputs(
+        song_pred, lyrics_length, idx,
+        bdr_pred=bdr_pred, line_start=line_start)
+    audio_length, num_class = song_pred.shape
 
     s = np.zeros((audio_length, 2*lyrics_length+1)) - np.Inf
     opt = np.zeros((audio_length, 2*lyrics_length+1))

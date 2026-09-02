@@ -4,82 +4,116 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**track-lrc-align** is an AI-powered lyrics-to-music alignment tool. It takes a lyrics text file + audio file and produces a timestamped LRC file with per-word (or per-line) timing. It supports Chinese, Japanese, Korean, English, and Russian.
+**track-lrc-align** is a Python inference CLI that aligns lyrics to audio and produces timestamped LRC output at word or line granularity. It supports Chinese, Japanese, Korean, English, and Russian.
 
-## Commands
+The supported workflow is inference. Training/evaluation scripts under `t2l/mtl/` are not self-contained in this checkout: they reference missing modules and external data dependencies, so do not assume they are runnable.
 
-**Dependencies (Python 3.9/3.10):**
+## Setup and Commands
+
+Use Python 3.9 or 3.10. Model checkpoints and the fastText language-identification model are stored with Git LFS.
+
 ```bash
+git lfs install
+git lfs pull
 pip install -r requirements.txt
 ```
 
-**CLI usage:**
+Run commands from the repository root. Both checkpoint paths and `lid.176.ftz` are resolved relative to the current working directory.
+
 ```bash
+# Demo
+python main.py demofile/original_txt.txt demofile/original_track.mp3
+
+# General usage
 python main.py <lyrics_file> <audio_file> \
-  -f lrc|srt \         # output format (default: lrc; srt accepted but not yet implemented)
-  -l 0|1 \             # 0=word-level (default), 1=line-level
-  -v 0|1 \             # 1=separate vocals via Demucs (default), 0=skip vocal separation
-  -m mdx_extra \       # demucs model (mdx|mdx_extra|mdx_q|mdx_extra_q)
-  -i -1                # demucs model index (-1=ensemble)
+  -f lrc \
+  -l 0 \
+  -v 1 \
+  -m mdx_extra \
+  -i -1 \
+  -o output
 ```
+
+CLI options:
+- `-f/--format`: only `lrc` is accepted; SRT output is not implemented.
+- `-l/--line_only`: `0` for enhanced word-timed LRC, `1` for line-level output.
+- `-v/--vocalize`: `1` to separate vocals with Demucs, `0` to align the original audio directly.
+- `-m/--model`: Demucs model (`mdx`, `mdx_extra`, `mdx_q`, or `mdx_extra_q`).
+- `-i/--idx`: Demucs sub-model index; `-1` uses the ensemble, while `0`–`3` selects one sub-model.
+- `-o/--out_dir`: output directory, created by the CLI when absent.
+
+Tests use `pytest` and are designed to run without loading checkpoints, downloading Demucs models, or requiring a GPU.
+
+```bash
+# Full lightweight regression suite
+python -m pytest -q
+
+# Single test module or test
+python -m pytest tests/test_alignment.py -q
+python -m pytest tests/test_alignment.py::test_alignment_minimum_valid_input_is_quiet -q
+
+# Syntax check
+python -m compileall main.py t2l tests
+```
+
+There is no configured linter, formatter, type checker, build system, or CI workflow in this repository. Do not invent commands for these.
 
 ## Architecture
 
-### Processing Pipeline
+### Runtime Flow
 
+```text
+main.py
+  -> detect lyrics-file encoding and read lines
+  -> t2l/t2l.py: process()
+       -> remove existing LRC/metadata tags and validate lyrics
+       -> t2l/phonetic.py: detect language and romanize/transliterate words
+       -> load audio (torchaudio, with librosa fallback)
+       -> optionally isolate vocals with Demucs
+       -> resample to 22,050 Hz
+       -> t2l/mtl/utils.py: convert normalized words to model phoneme IDs with g2p_en
+       -> t2l/mtl/wrapper.py: load acoustic model and compute mel features
+       -> CNN-BiLSTM phoneme posterior prediction
+       -> t2l/mtl/utils.py: DTW-style phoneme/word alignment
+       -> gen_lrc(): convert frame starts to LRC timestamps
+  -> print enhanced LRC and write a standard line-timestamp LRC file
 ```
-lyrics text + audio file
-  → t2l/phonetic.py: language detection (regex CJK → fastText fallback)
-                     → phonetize to ASCII phonemes per language
-  → t2l/t2l.py: audio loading (torchaudio → librosa fallback)
-               → vocal separation via Demucs (mdx_extra model) [skipped if vocalize=False]
-               → resample to 22050 Hz
-  → t2l/mtl/wrapper.py: mel-spectrogram → CNN-RNN acoustic model
-                        → phoneme posteriorgram prediction
-                        → DTW alignment (utils.alignment / alignment_bdr)
-  → t2l/t2l.py: gen_lrc() converts frame indices to [MM:SS.mmm] timestamps
-  → stdout / file output
-```
 
-### Key Constants
-- Sample rate: **22050 Hz**
-- Frame resolution: `256 / 22050 * 3` seconds per frame (~0.0348s)
-- Mel features: 128, FFT: 512, used in `train_audio_transforms` (wrapper.py)
+`main.py` is the CLI boundary. It calls `process()` for enhanced output, prints that output, then writes `<audio-basename>.lrc` under `--out_dir` using one timestamp per lyric line.
 
-### Model Checkpoints (`./checkpoints/`)
-- `checkpoint_Baseline` — single-task acoustic model, 41 phoneme classes
-- `checkpoint_MTL` — multi-task learning, classes (41, 47); default for CLI
-- `checkpoint_BDR` — boundary detection model (1.8 MB), used with `*_BDR` methods
+`t2l/t2l.py` orchestrates input cleanup, audio loading, optional Demucs separation, alignment, and LRC generation. Its primary API is:
 
-Model loading path is relative to CWD: `./checkpoints/checkpoint_<type>`. The process **must be run from the repo root**.
-
-### The `process()` signature (`t2l/t2l.py`)
 ```python
 process(txt_lines, audio_file, mtl_model='MTL', demucs_model='mdx_extra',
         demucs_idx=-1, line_only=False, out_file=None, verbose=True,
         vocalize=True, format='lrc')
 ```
-- `vocalize=False` skips Demucs vocal separation and runs alignment directly on the raw audio.
-- `format` is accepted for forward-compatibility but only `lrc` output is currently implemented.
 
-### The `method` parameter in `align()`
-Accepts a string `"Baseline"`, `"MTL"`, `"Baseline_BDR"`, or `"MTL_BDR"`, or a pre-loaded tuple `(ac_model, bdr_model, model_type, bdr_flag, device)` from `load_mtl_model()`. Pre-loading via `t2l/init_model.py` can be used to avoid repeated model initialization.
+`t2l/phonetic.py` loads `lid.176.ftz` at import time. Script regexes take precedence over fastText: Japanese kana, CJK ideographs, Hangul, and Cyrillic map directly to `ja`, `zh`, `ko`, and `ru`; remaining text uses fastText. Language-specific libraries then normalize, romanize, or transliterate the words. `gen_phone_gt_opt()` in `t2l/mtl/utils.py` subsequently uses `g2p_en` to convert those tokens into the phoneme IDs consumed by the acoustic model.
 
-### Language Detection (`t2l/phonetic.py`)
-Regex takes priority over fastText for CJK scripts:
-1. Japanese katakana/hiragana range → `ja`
-2. CJK unified ideographs → `zh`
-3. Hangul → `ko`
-4. Cyrillic → `ru`
-5. fastText `lid.176.ftz` for remaining cases (fallback)
+`t2l/mtl/wrapper.py` owns feature extraction, checkpoint loading, acoustic-model inference, and dispatch to alignment. It accepts mono `[samples]` or channel-first `[channels, samples]` audio; multichannel input uses the first channel rather than concatenating channels along the time axis. Acoustic and optional boundary-model forward passes run under `torch.inference_mode()`. `t2l/mtl/model.py` defines the CNN-BiLSTM model; `t2l/mtl/utils.py` contains the alignment algorithms.
 
-### Error Types
-- `TxtValueError` — invalid/empty lyrics after parsing
-- `AudioValueError` — audio load failure (both torchaudio and librosa failed)
+### Models and Alignment
 
-## Important Implementation Details
+Runtime checkpoints live under `./checkpoints/`:
+- `checkpoint_Baseline`: single-task acoustic model with 41 phoneme classes.
+- `checkpoint_MTL`: multi-task model with 41- and 47-class outputs; this is the CLI default.
+- `checkpoint_BDR`: boundary detector used by `*_BDR` alignment methods.
 
-- `gen_lrc()` in `t2l/t2l.py` has boundary guards: if `word_align` is shorter than the total words in `lines`, it truncates rather than crashing (critical fix from AI-129).
-- Audio loading tries `torchaudio.load` first; falls back to `librosa.load` if it returns empty tensor (handles formats torchaudio can't decode).
-- Demucs ensemble models (`mdx_extra`) contain 4 sub-models; `demucs_idx=-1` uses the ensemble, `0-3` selects a single sub-model.
-- `pykakasi` (Japanese romanization) is GPL-licensed — take note if changing licensing.
+`align()` accepts `"Baseline"`, `"MTL"`, `"Baseline_BDR"`, or `"MTL_BDR"`. It also accepts the tuple returned by `load_mtl_model()` so callers can preload models and avoid repeated initialization. `t2l/init_model.py` re-exports the loader; its module globals are defaults, not preloaded model instances.
+
+Important signal constants:
+- sample rate: 22,050 Hz
+- mel bins: 128
+- FFT size: 512
+- timestamp frame resolution: `256 / 22050 * 3` seconds (about 34.8 ms)
+
+CUDA is used when available; both Demucs and the acoustic model fall back to CPU.
+
+### Failure and Boundary Behavior
+
+- `TxtValueError` indicates empty or invalid lyrics after parsing.
+- `AudioValueError` indicates that both torchaudio and librosa failed to load usable audio; Demucs/model/CUDA failures retain their original exception type.
+- `AlignmentValueError` indicates that the audio-frame/phoneme dimensions or word/line indices cannot form a valid DTW path.
+- `gen_lrc()` truncates safely when alignment results contain fewer words than the parsed lyrics instead of indexing past `word_align`.
+- `pykakasi`, used for Japanese romanization, is GPL-licensed; account for that when changing distribution or licensing.

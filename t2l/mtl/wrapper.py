@@ -27,61 +27,61 @@ def align(audio, words, lyrics_p, idx_word_p, idx_line_p, method="Baseline", cud
     t = time()
 
     # constants
-    resolution = 256 / 22050 * 3
     alpha = 0.8
 
     # decode method
     if isinstance(method, str):
-        method = load_mtl_model(method=method, cuda=cuda)
+        method = load_mtl_model(method=method, cuda=cuda, verbose=verbose)
     ac_model, bdr_model, model_type, bdr_flag, device = method
 
-    # reshape input, prepare mel
-    x = audio.reshape(1, 1, -1)
-    x = utils.move_data_to_device(x, device)
-    x = x.squeeze(0)
-    x = x.squeeze(1)
-    x = train_audio_transforms.to(device)(x)
-    x = nn.utils.rnn.pad_sequence(x, batch_first=True).unsqueeze(1)
+    if not isinstance(audio, torch.Tensor):
+        audio = torch.as_tensor(audio)
+    if audio.ndim == 1:
+        audio = audio.unsqueeze(0)
+    if audio.ndim != 2 or audio.shape[0] < 1 or audio.shape[1] < 1:
+        raise ValueError(
+            "Audio must have shape [samples] or [channels, samples] with at "
+            "least one sample."
+        )
+    audio = audio.to(dtype=torch.float32)
 
-    # predict
-    all_outputs = ac_model(x).data
-    if model_type == "MTL":
-        all_outputs = torch.sum(all_outputs, dim=3)
+    # Keep the first channel for compatibility with the previous flattened input,
+    # whose retained output corresponded most closely to the left channel.
+    waveform = audio[:1]
 
-    all_outputs = F.log_softmax(all_outputs, dim=2)
+    with torch.inference_mode():
+        # reshape input, prepare mel
+        x = utils.move_data_to_device(waveform, device)
+        x = train_audio_transforms.to(device)(x)
+        x = nn.utils.rnn.pad_sequence(x, batch_first=True).unsqueeze(1)
 
-    batch_num, output_length, num_classes = all_outputs.shape
-    # song_pred = all_outputs.data.cpu().numpy(
-    # ).reshape(-1, num_classes)  # total_length, num_classes
-    song_pred = all_outputs.reshape(-1, num_classes)  # total_length, num_classes
-    total_length = int(audio.shape[1] / 22050 // resolution)
-    song_pred = song_pred[:total_length]
+        # predict
+        all_outputs = ac_model(x)
+        if model_type == "MTL":
+            all_outputs = torch.sum(all_outputs, dim=3)
 
-    # smoothing
-    P_noise = torch.empty_like(song_pred).uniform_(1e-11, 1e-10)
-    # P_noise = np.random.uniform(low=1e-11, high=1e-10, size=song_pred.shape)
-    # song_pred = np.log(np.exp(song_pred) + P_noise)
-    song_pred.exp_().add_(P_noise).log_()
+        all_outputs = F.log_softmax(all_outputs, dim=2)
 
-    verbose and print("Computing phoneme posteriorgram...")
+        _, _, num_classes = all_outputs.shape
+        song_pred = all_outputs.reshape(-1, num_classes)
+
+        # smoothing
+        P_noise = torch.empty_like(song_pred).uniform_(1e-11, 1e-10)
+        song_pred = torch.log(torch.exp(song_pred) + P_noise)
+
+        verbose and print("Computing phoneme posteriorgram...")
+        if bdr_flag:
+            verbose and print("Computing boundary probability curve...")
+            bdr_outputs = bdr_model(x).reshape(-1)
+            bdr_outputs = torch.log(bdr_outputs) * alpha
+
     if bdr_flag:
-        verbose and print("Computing boundary probability curve...")
-        # get boundary prob curve
-        # bdr_outputs = bdr_model(x).data.cpu().numpy().reshape(-1)
-        bdr_outputs = bdr_model(x).data.reshape(-1)
-        # apply log
-        # bdr_outputs = np.log(bdr_outputs) * alpha
-        bdr_outputs.log_().mul_(alpha)
-
-        # line_start = [d[0] for d in idx_line_p]
         line_start = idx_line_p[:, 0]
-
-        # start alignment
         verbose and print("Aligning...It might take a few minutes..., FIXME optimize perf.")
         word_align, score = utils.alignment_bdr(
-            song_pred, lyrics_p, idx_word_p, bdr_outputs, line_start)
+            song_pred.detach().cpu().numpy(), lyrics_p, idx_word_p,
+            bdr_outputs.detach().cpu().numpy(), line_start)
     else:
-        # start alignment
         verbose and print("Aligning...It might take a few minutes...")
         word_align, score = utils.alignment(song_pred, lyrics_p, idx_word_p)
 
@@ -91,7 +91,7 @@ def align(audio, words, lyrics_p, idx_word_p, idx_line_p, method="Baseline", cud
     return word_align, words
 
 
-def load_mtl_model(method="Baseline", cuda=True):
+def load_mtl_model(method="Baseline", cuda=True, verbose=True):
     cuda =  cuda and torch.cuda.is_available()
     # decode method
     if "BDR" in method:
@@ -100,7 +100,7 @@ def load_mtl_model(method="Baseline", cuda=True):
     else:
         model_type = method
         bdr_flag = False
-    print("Model: {} BDR?: {}".format(model_type, bdr_flag))
+    verbose and print("Model: {} BDR?: {}".format(model_type, bdr_flag))
 
     # prepare acoustic model params
     if model_type == "Baseline":
@@ -127,7 +127,7 @@ def load_mtl_model(method="Baseline", cuda=True):
         hparams['n_feats'], hparams['stride'], hparams['dropout']
     ).to(device)
 
-    print("Loading acoustic model from checkpoint..., cuda:", cuda) # True may cause OOM
+    verbose and print("Loading acoustic model from checkpoint..., cuda:", cuda) # True may cause OOM
     utils.load_model(
         ac_model, "./checkpoints/checkpoint_{}".format(model_type), cuda=cuda)
     ac_model.eval()
@@ -147,9 +147,9 @@ def load_mtl_model(method="Baseline", cuda=True):
             bdr_hparams['n_cnn_layers'], bdr_hparams['rnn_dim'], bdr_hparams['n_class'],
             bdr_hparams['n_feats'], bdr_hparams['stride'], bdr_hparams['dropout']
         ).to(device)
-        print("Loading BDR model from checkpoint...")
+        verbose and print("Loading BDR model from checkpoint...")
         utils.load_model(
-            bdr_model, "./checkpoints/checkpoint_BDR", cuda=(device == "gpu"))
+            bdr_model, "./checkpoints/checkpoint_BDR", cuda=cuda)
         bdr_model.eval()
     else:
         bdr_model = None
