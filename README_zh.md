@@ -8,8 +8,8 @@
 歌词文件：<UTF-8 歌词绝对路径>
 音频文件：<对应歌曲音频绝对路径>
 输出文件：<新的 LRC 绝对路径>
-先阅读 docs/README.md、docs/USER_GUIDE.zh-CN.md、docs/PROJECT_STATUS.zh-CN.md；
-集成或改代码时再读 docs/TECHNICAL_GUIDE.zh-CN.md 和 CLAUDE.md。
+先阅读 docs/README.zh-CN.md、docs/USER_GUIDE.zh-CN.md、docs/PROJECT_STATUS.zh-CN.md；
+集成或改代码时再读 docs/TECHNICAL_GUIDE.zh-CN.md 和 CLAUDE.zh-CN.md。
 核对当前分支、Python 3.10/3.11、pyproject.toml/uv.lock 及六项运行资产。
 使用 v2 的 ai-auto-lrc CLI；从项目外运行时使用该环境可执行文件。
 默认 CPU、MTL、行级、严格完整、不分离人声，使用规范真实输出路径。
@@ -20,14 +20,14 @@
 本轮不要求异常全覆盖，不把未验证的平台、安全或发布门禁描述为通过。
 ```
 
-[文档导航](docs/README.md) · [如何使用](docs/USER_GUIDE.zh-CN.md) · [系统说明](docs/SYSTEM_OVERVIEW.zh-CN.md) · [技术文档](docs/TECHNICAL_GUIDE.zh-CN.md) · [当前进展](docs/PROJECT_STATUS.zh-CN.md)
+[文档导航](docs/README.zh-CN.md) · [如何使用](docs/USER_GUIDE.zh-CN.md) · [系统说明](docs/SYSTEM_OVERVIEW.zh-CN.md) · [技术文档](docs/TECHNICAL_GUIDE.zh-CN.md) · [当前进展](docs/PROJECT_STATUS.zh-CN.md)
 
-> 2026-09-12：按用户决定暂缓异常场景全覆盖，当前 v2 已合入 `main`，安装以主分支为入口；版本仍为 Alpha，发布门禁保持未通过。
+> 2026-09-12：按用户决定暂缓异常场景全覆盖，当前 v2 已合入 `main`，安装以主分支为入口；版本仍为 Alpha，发布门禁保持未通过。当前说明以英文为主，每篇提供对应中文版。
 
 
 离线优先的歌词—音频对齐工具，输出标准行级 LRC，也可显式选择逐词时间戳。
 
-[English](README.md) · [v2 执行与测试计划](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md) · [LegacyV1 交接事实](docs/AI_REFACTOR_HANDOFF.zh-CN.md)
+[English (primary)](README.md) · [简体中文](README_zh.md) · [v2 执行与测试计划](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md) · [LegacyV1 交接事实](docs/AI_REFACTOR_HANDOFF.zh-CN.md)
 
 > 当前状态：`2.0.0a0` 开发版本。v2 API 和核心适配器已经实现，但发布资格仍在验证中。当前 checkout 不是生产发行版，也不能作为对齐质量证明。
 
@@ -213,7 +213,7 @@ PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python -m pytest \
   tests/system/test_security_runtime_identity_r3.py -q -p no:cacheprovider
 ```
 
-该入口串行执行原始 capture/retention 测试与验证器，拒绝 IP 网络和项目/运行环境写入，仅允许在临时证据目录内绑定 Unix socket。日志、产物和前后文件摘要保存在 pytest 临时目录；需要保留路径时可显式指定全新 `--basetemp`。这只验证当前 macOS 正常对照，不代替异常矩阵、其他平台或发布资格；最新状态见 [S18 执行方案](docs/S18_P1_EXECUTABLE_REFACTOR_PLAN.zh-CN.md) 第36.41–36.42节。
+该入口串行执行原始 capture/retention 测试与验证器，拒绝 IP 网络和项目/运行环境写入，仅允许在临时证据目录内绑定 Unix socket。日志、产物和前后文件摘要保存在 pytest 临时目录；需要保留路径时可显式指定全新 `--basetemp`。这只验证当前 macOS 正常对照，不代替异常矩阵、其他平台或发布资格；原始对照记录见 [S18 历史执行方案](docs/S18_P1_EXECUTABLE_REFACTOR_PLAN.zh-CN.md) 第36.41–36.42节，当前范围见[项目状态](docs/PROJECT_STATUS.zh-CN.md)。
 
 ## 从 v1 迁移
 
@@ -223,4 +223,4 @@ v2 明确不发布旧 `t2l.t2l.process(...)` 散参数接口、五元模型 tupl
 
 ## 许可证与来源
 
-参见 [LICENSE](LICENSE) 和 [BASELINE_PROVENANCE.md](docs/BASELINE_PROVENANCE.md)。部分语言处理依赖和模型资产有各自许可证。仅获准内部生成测试并不等于已验证可再分发；release artifact 必须通过计划中的许可证和 provenance 门禁。
+参见 [LICENSE](LICENSE) 和 [基线来源与恢复](docs/BASELINE_PROVENANCE.zh-CN.md)。部分语言处理依赖和模型资产有各自许可证。仅获准内部生成测试并不等于已验证可再分发；release artifact 必须通过计划中的许可证和 provenance 门禁。

@@ -8,8 +8,8 @@ Repository: <absolute repository path>
 Lyrics: <absolute UTF-8 lyrics path>
 Audio: <absolute path to the matching recording>
 Output: <absolute path to a new LRC file>
-Read docs/README.md, docs/USER_GUIDE.zh-CN.md and docs/PROJECT_STATUS.zh-CN.md
-first; for integration or edits also read the technical guide and CLAUDE.md.
+Read docs/README.md, docs/USER_GUIDE.md and docs/PROJECT_STATUS.md
+first; for integration or edits also read docs/TECHNICAL_GUIDE.md and CLAUDE.md.
 Check the branch, Python 3.10/3.11, pyproject.toml/uv.lock and all six runtime assets.
 Use the v2 ai-auto-lrc CLI from the project's environment, with explicit paths.
 Start with CPU, MTL, line timestamps, strict completeness and no vocal separation.
@@ -22,14 +22,14 @@ output path and failures. Successful execution is not proof of alignment accurac
 Exhaustive abnormal scenarios are deferred; do not claim unverified release gates pass.
 ```
 
-[Documentation index](docs/README.md) · [Usage](docs/USER_GUIDE.zh-CN.md) · [System overview](docs/SYSTEM_OVERVIEW.zh-CN.md) · [Technical guide](docs/TECHNICAL_GUIDE.zh-CN.md) · [Current status](docs/PROJECT_STATUS.zh-CN.md)
+[Documentation index](docs/README.md) · [Usage](docs/USER_GUIDE.md) · [System overview](docs/SYSTEM_OVERVIEW.md) · [Technical guide](docs/TECHNICAL_GUIDE.md) · [Current status](docs/PROJECT_STATUS.md)
 
-> 2026-09-12: Exhaustive abnormal-scenario coverage is deferred by user decision. The v2 snapshot is now integrated into `main`, the installation entrypoint. It remains Alpha with incomplete release qualification. The detailed guides are in Chinese.
+> 2026-09-12: Exhaustive abnormal-scenario coverage is deferred by user decision. The v2 snapshot is now integrated into `main`, the installation entrypoint. It remains Alpha with incomplete release qualification. English is the primary documentation; every current guide has a Chinese companion.
 
 
 Offline-first lyrics-to-audio alignment with standard line-level or optional word-level LRC output.
 
-[中文说明](README_zh.md) · [v2 execution and test plan](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md) · [LegacyV1 handoff](docs/AI_REFACTOR_HANDOFF.zh-CN.md)
+[English (primary)](README.md) · [简体中文](README_zh.md) · [Historical v2 execution plan (Chinese)](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md) · [Historical LegacyV1 handoff (Chinese)](docs/AI_REFACTOR_HANDOFF.zh-CN.md)
 
 > Status: `2.0.0a0` development build. The v2 API and core adapters are implemented, but release qualification is still in progress. Do not treat the current checkout as a production release or as evidence of alignment quality.
 
@@ -209,7 +209,7 @@ uv build
 Linux CPython 3.10 functional canonical evidence, real WAV/MP3 cases, concurrent initialization, and a Linux x86_64 cold-cache offline install are now covered; they are still not release proof. The release plan still requires an approved natural non-empty partial contract, complete resource limits, macOS cold installation and a two-platform aggregator, offline Demucs coverage, clean signed provenance, SBOM/attestation, and recovery/rollback drills. A host-only or single-platform green suite does not replace those gates.
 
 The macOS / Python 3.11 R3 security-runtime baseline has a separate, explicit system test
-entrypoint (outside the portable contract layer):
+entrypoint (outside the portable contract layer). It takes several minutes:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python -m pytest \
@@ -219,14 +219,17 @@ PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python -m pytest \
 It runs the original capture and retention suites and verifier serially, denies
 IP networking and writes to the checkout/runtime, and permits Unix socket binding
 only inside its temporary evidence directory. Raw artifacts and before/after
-inventories remain in the pytest temporary directory. This is a macOS baseline,
-not qualification of adversarial scenarios, other platforms, or a release.
+inventories remain in the pytest temporary directory. To preserve a specific path,
+pass a new, unused `--basetemp`. This is a macOS baseline, not qualification of
+adversarial scenarios, other platforms, or a release. See sections 36.41–36.42 of
+the [historical S18 implementation plan (Chinese)](docs/S18_P1_EXECUTABLE_REFACTOR_PLAN.zh-CN.md)
+for the original baseline record, and [project status](docs/PROJECT_STATUS.md) for current scope.
 
 ## Migration from v1
 
 v2 intentionally does not publish the old `t2l.t2l.process(...)` signature, preloaded five-element model tuples, implicit decoder fallback, default Demucs behavior, or automatic enhanced-to-standard LRC conversion. Migrate callers to `AlignmentRequest`/`AlignmentResult` and choose output, decoder, partial, and vocal-separation policies explicitly.
 
-Use the [v1-to-v2 migration guide](docs/V1_TO_V2_MIGRATION.zh-CN.md) for the parameter-by-parameter mapping and exit-code handling. The frozen v1 facts and exact behavior boundaries are retained in [the handoff document](docs/AI_REFACTOR_HANDOFF.zh-CN.md); the executable validation gates are in [the v2 plan](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md).
+Use the [v1-to-v2 migration guide](docs/V1_TO_V2_MIGRATION.md) for the parameter-by-parameter mapping and exit-code handling. The frozen v1 facts and exact behavior boundaries are retained in [the historical handoff (Chinese)](docs/AI_REFACTOR_HANDOFF.zh-CN.md); the executable validation gates are in [the historical v2 plan (Chinese)](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md).
 
 ## License and provenance
 

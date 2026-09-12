@@ -1,5 +1,7 @@
 # 系统说明
 
+[English (primary)](SYSTEM_OVERVIEW.md) · [简体中文](SYSTEM_OVERVIEW.zh-CN.md) · [文档导航](README.zh-CN.md)
+
 ## 系统用途
 
 AI-auto-lrc 接收已有歌词和对应歌曲音频，为歌词计算时间戳，输出可供播放器使用的 LRC。用户需要准备同一录音版本的正确歌词；系统不从音频自动识别或创作歌词，不提供网页、HTTP 服务或常驻任务调度。

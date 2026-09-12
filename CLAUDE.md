@@ -1,10 +1,12 @@
 # CLAUDE.md
 
+[English (primary)](CLAUDE.md) · [简体中文](CLAUDE.zh-CN.md)
+
 Repository guidance for AI coding agents working on AI-auto-lrc v2.
 
 ## Current delivery decision (2026-09-12)
 
-Read `docs/README.md` and `docs/PROJECT_STATUS.zh-CN.md` for current use and scope. The user explicitly authorized documentation updates and pushing the development snapshot, then requested merging and pushing it to `main`. The current installation entrypoint is `main`; preserve both histories with a normal merge. That authorization satisfies the commit/push approval requirement for this delivery; do not ask again. Exhaustive abnormal-scenario coverage is deferred, not passed. Preserve existing checks and frozen evidence; no release tag, force push, or main-branch rewrite is authorized.
+Read `docs/README.md` and `docs/PROJECT_STATUS.md` for current use and scope. The user explicitly authorized documentation updates and pushing the development snapshot, then requested merging and pushing it to `main`. The current installation entrypoint is `main`; preserve both histories with a normal merge. That authorization satisfies the commit/push approval requirement for this delivery; do not ask again. Exhaustive abnormal-scenario coverage is deferred, not passed. Preserve existing checks and frozen evidence; no release tag, force push, or main-branch rewrite is authorized.
 
 ## Source of truth
 
@@ -51,7 +53,7 @@ git lfs pull
 uv sync --frozen --python 3.11 --group dev
 ```
 
-Basic unit and component tests (full selected core suite: `docs/TECHNICAL_GUIDE.zh-CN.md`):
+Basic unit and component tests (full selected core suite: `docs/TECHNICAL_GUIDE.md`):
 
 ```bash
 uv run --offline --frozen --no-sync python -m pytest tests/unit -q -p no:cacheprovider
@@ -82,6 +84,10 @@ Do not install an undeclared package during a test to make it pass. Package test
 
 ## Change and commit gates
 
-The approved execution plan is Gate 1. Continue implementing and validating in small slices. Before a commit, provide the intended file set, validation evidence, unresolved gates, and Conventional Commit message, then wait for explicit Gate 2 approval. Do not push or rewrite Git history without separate explicit authorization.
+The approved execution plan is Gate 1. Continue implementing and validating in small slices. Before a commit, provide the intended file set, validation evidence, unresolved gates, and Conventional Commit message, then wait for explicit Gate 2 approval only when authorization is still missing. Do not push or rewrite Git history without separate explicit authorization.
 
 The verified Git bundle does not include LFS objects or current untracked changes. Preserve user changes, inspect `git status`, and do not claim disaster recovery until the plan's independent LFS/dirty-state archive and offline restore drill pass.
+
+## Documentation language convention
+
+English is primary for current explanatory documentation and uses default filenames without a language suffix. Chinese companions use `.zh-CN.md`, except the root `README_zh.md`. Keep commands, parameters, defaults, and validation limits synchronized across both versions. Each page provides a language switch and navigation in its own language. Preserve historical execution plans, team reviews, and evidence as original records; translations or summaries do not constitute fresh acceptance evidence.

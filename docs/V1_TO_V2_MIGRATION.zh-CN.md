@@ -1,5 +1,7 @@
 # AI-auto-lrc v1 到 v2 迁移指南
 
+[English (primary)](V1_TO_V2_MIGRATION.md) · [简体中文](V1_TO_V2_MIGRATION.zh-CN.md) · [文档导航](README.zh-CN.md)
+
 本文面向已经调用 v1 CLI 或 Python `process()` 的集成方。v2 是显式破坏性版本：它通过 `legacy-v1` profile 保留 LegacyV1 模型数值协议，但不发布旧模块、旧参数签名、五元模型 tuple、默认 Demucs、隐式 decoder fallback 或“stdout 增强 LRC 加自动写标准 LRC”的双输出行为。
 
 迁移完成的判定不是“旧命令还能跑”，而是调用方已经改用 v2 的结构化请求与结果、显式资产根和输出策略，并正确区分 complete、用户接受的 partial 和 strict failure。
@@ -27,7 +29,7 @@ v1 默认同时把增强 LRC 和进度写到 stdout，并在 `out_dir` 中覆盖
 
 - 不传 `-o`：stdout 只包含 UTF-8 LRC 和恰好一个尾换行；日志、进度和错误只进入 stderr；
 - 传 `-o FILE`：stdout 为空，LRC 以原子替换写入完整目标路径；
-- 输出不得与歌词或音频输入指向同一对象，也不得是目录、FIFO、device 或 symlink；
+- 输出不得与歌词或音频输入指向同一对象，也不得是目录、FIFO、device 或 symlink，且拒绝符号链接祖先；
 - `--timestamps line` 直接生成标准行级 LRC，`--timestamps word` 直接生成逐字时间戳 LRC，不再运行独立的增强转标准步骤。
 
 迁移前：
@@ -57,12 +59,14 @@ uv run ai-auto-lrc lyrics.txt song.mp3 \
 | `demucs_model` | `VocalSeparationOptions.demucs_model` | 仅在人声分离显式启用时构造 options |
 | `demucs_idx` | `VocalSeparationOptions.demucs_index` | 只接受 `-1..3`，构造时立即校验 |
 | `line_only` | `AlignmentRequest.timestamp_mode` | `True -> "line"`，`False -> "word"`；v2 默认 `line` |
-| `out_file` | 调用方文件逻辑或 v2 CLI `-o` | Python API 不写文件；成功后消费 `AlignmentResult.lrc` |
-| `verbose` | CLI `--verbose` 或自定义 observer 边界 | 顶层 Python API 默认静默，不打印 stdout/stderr |
+| `out_file` | 调用方文件逻辑或 v2 CLI `-o` | Python API 不写 LRC；成功后消费 `AlignmentResult.lrc` |
+| `verbose` | CLI `--verbose` 或自定义 observer 边界 | 顶层 Python API 不主动打印进度；依赖可能产生警告 |
 | `vocalize` | `AlignmentRequest.vocal_separation` | `None` 表示关闭；不再默认开启 Demucs |
 | `format` | 无 | 删除；v2 本轮只返回 LRC 结构化结果 |
 
 v1 返回裸 LRC 字符串。v2 返回 `AlignmentResult`，调用方必须至少检查 `status`、`lrc`、`spans`、`expected_token_count`、`model_profile`、`timebase` 和 `diagnostics`。运行时配置独立放入 `RuntimeConfig`；其中 `asset_root` 必须是绝对受控根，`offline` 固定为 `True`，默认 `decoder="torchaudio"`、`device="auto"`、`seed=0`、`max_alignment_bytes=536870912`。
+
+运行时准备仍会读取输入并创建私有资产副本。可选 Demucs 未完整执行 offline 约束，可能下载权重；边界见[技术指南](TECHNICAL_GUIDE.zh-CN.md)。
 
 迁移后 Python 示例：
 
@@ -135,7 +139,7 @@ esac
 ## 5. 迁移验收清单
 
 1. 旧模块不再被 import，五元模型 tuple 不再跨进程或跨版本持久化。
-2. 每次调用都显式提供受控绝对 asset root；不依赖 CWD、用户 cache 或在线下载。
+2. 每次调用都显式提供受控绝对 asset root；核心路径不依赖 CWD、用户 cache 或在线下载。
 3. timestamps、decoder、acoustic model、partial 和 vocal separation 都由调用方明确选择或接受文档化默认值。
 4. Python 调用检查结构化状态；CLI 调用只消费一个输出目标，并区分退出码 `0`、`3`、`7`。
 5. 在源码树外 CWD 和空 `PYTHONPATH` 中运行 installed console script。

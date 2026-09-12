@@ -1,5 +1,7 @@
 # v1 Baseline Provenance and Recovery
 
+[English (primary)](BASELINE_PROVENANCE.md) · [简体中文](BASELINE_PROVENANCE.zh-CN.md) · [Documentation index](README.md)
+
 This record was captured before the v2 implementation started.
 
 - Baseline commit: `db8e714eceb73e88496f0f705a56cd8c571e0278`

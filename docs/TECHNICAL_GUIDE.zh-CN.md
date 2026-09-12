@@ -1,5 +1,7 @@
 # 技术指南
 
+[English (primary)](TECHNICAL_GUIDE.md) · [简体中文](TECHNICAL_GUIDE.zh-CN.md) · [文档导航](README.zh-CN.md)
+
 ## 结构与职责
 
 | 模块 | 职责 |
@@ -82,7 +84,13 @@ uv lock --check --offline
 面向默认核心路径的基础验证（依赖和本地资产已准备好）：
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python -m pytest   tests/unit tests/component tests/test_alignment.py   tests/contract/test_cli_contract.py tests/contract/test_cli_subprocess.py   tests/contract/test_application_ports.py tests/contract/test_composition.py   tests/contract/test_dependency_boundaries.py tests/contract/test_migration_contract.py   tests/contract/test_error_registry.py tests/contract/test_document_links.py   tests/contract/test_spec_inventory.py -q -p no:cacheprovider
+PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python -m pytest \
+  tests/unit tests/component tests/test_alignment.py \
+  tests/contract/test_cli_contract.py tests/contract/test_cli_subprocess.py \
+  tests/contract/test_application_ports.py tests/contract/test_composition.py \
+  tests/contract/test_dependency_boundaries.py tests/contract/test_migration_contract.py \
+  tests/contract/test_error_registry.py tests/contract/test_document_links.py \
+  tests/contract/test_spec_inventory.py -q -p no:cacheprovider
 ```
 
 `tests/contract` 还含安全、进程与证据运行器测试，不应将整个目录称为快速测试。`component` 需要本地资产/解码器；`golden` 需要锁定 canonical 环境；`package` 检查构建/安装；`system` 涉及真实进程和平台隔离。直接执行全仓 pytest 会扩展验证范围，本轮文档交付不要求覆盖完整异常矩阵。

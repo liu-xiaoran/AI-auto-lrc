@@ -1,5 +1,7 @@
 # 使用指南
 
+[English (primary)](USER_GUIDE.md) · [简体中文](USER_GUIDE.zh-CN.md) · [文档导航](README.zh-CN.md)
+
 ## 1. 获取当前开发版本
 
 先准备 Git、Git LFS、uv 和 Python 3.11。首次下载依赖及模型可能需要网络；在受限网络环境中应事先准备依赖缓存与完整资产。
@@ -34,7 +36,11 @@ assets/nltk_data/taggers/averaged_perceptron_tagger.zip
 
 ```bash
 PROJECT_ROOT="$(pwd -P)"
-uv run --offline --frozen --no-sync ai-auto-lrc   "$PROJECT_ROOT/demofile/original_txt.txt"   "$PROJECT_ROOT/demofile/original_track.mp3"   --asset-root "$PROJECT_ROOT" --device cpu   -o "$PROJECT_ROOT/output/demo.lrc"
+uv run --offline --frozen --no-sync ai-auto-lrc \
+  "$PROJECT_ROOT/demofile/original_txt.txt" \
+  "$PROJECT_ROOT/demofile/original_track.mp3" \
+  --asset-root "$PROJECT_ROOT" --device cpu \
+  -o "$PROJECT_ROOT/output/demo.lrc"
 ```
 
 终端进度不代表完成，应检查命令退出码为 0，并打开生成文件。已有示例实测为 58 行，输出时间戳单调；行数与格式正确不能替代试听确认对齐准确性。
@@ -46,7 +52,10 @@ uv run --offline --frozen --no-sync ai-auto-lrc   "$PROJECT_ROOT/demofile/origin
 将占位路径替换为实际文件，路径含空格时保留引号：
 
 ```bash
-uv run --offline --frozen --no-sync ai-auto-lrc   "/absolute/path/lyrics.txt" "/absolute/path/song.wav"   --asset-root "/absolute/path/AI-auto-lrc" --device cpu   -o "/absolute/path/output/song.lrc"
+uv run --offline --frozen --no-sync ai-auto-lrc \
+  "/absolute/path/lyrics.txt" "/absolute/path/song.wav" \
+  --asset-root "/absolute/path/AI-auto-lrc" --device cpu \
+  -o "/absolute/path/output/song.lrc"
 ```
 
 从仓库外运行时，直接使用已安装环境的可执行文件，例如 `/absolute/path/AI-auto-lrc/.venv/bin/ai-auto-lrc`，并显式传入资产根；不要依赖任意当前目录寻找模型。输出路径各级目录不可为符号链接，macOS 的 `/var` 常指向 `/private/var`，应使用真实路径。

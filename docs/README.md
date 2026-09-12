@@ -1,15 +1,35 @@
-# AI-auto-lrc 文档导航
+# AI-auto-lrc documentation
 
-当前文档更新日期：2026-09-12；版本：`2.0.0a0`。先按使用目的选择入口，历史执行计划用于追溯，不替代当前操作说明。
+[English (primary)](README.md) · [简体中文](README.zh-CN.md)
 
-| 目的 | 文档 |
-|---|---|
-| 让 AI 协助运行 | [中文 README 顶部提示词](../README_zh.md)、[English README](../README.md) |
-| 安装、生成 LRC、处理常见问题 | [使用指南](USER_GUIDE.zh-CN.md) |
-| 了解系统能做什么、如何工作 | [系统说明](SYSTEM_OVERVIEW.zh-CN.md) |
-| API 集成、模块设计、测试和维护 | [技术指南](TECHNICAL_GUIDE.zh-CN.md) |
-| 当前完成情况、验证证据和暂缓事项 | [项目状态](PROJECT_STATUS.zh-CN.md) |
-| 迁移旧调用方 | [v1 到 v2 迁移指南](V1_TO_V2_MIGRATION.zh-CN.md) |
-| 查询原始实现、验收与恢复依据 | [v2 执行计划](AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md)、[LegacyV1 历史交接](AI_REFACTOR_HANDOFF.zh-CN.md)、[来源记录](BASELINE_PROVENANCE.md) |
+Updated: 2026-09-12; version: `2.0.0a0`. **English is the primary documentation language.** Use the Chinese companion linked on each page when preferred. Current guides explain operation; historical execution plans provide traceability.
 
-当前 `main` 提供可用于本地核心流程的 Alpha 快照，已按用户后续指令合入 v2 开发成果。按用户决定，异常场景暂不全覆盖；这不会将尚未验证的发布门禁改为通过。完整状态以项目状态文档为入口。
+| Purpose | English (primary) | 简体中文 |
+|---|---|---|
+| Ask an AI assistant to run the project | [README and copyable prompt](../README.md) | [README 与提示词](../README_zh.md) |
+| Install, generate LRC, and troubleshoot | [User guide](USER_GUIDE.md) | [使用指南](USER_GUIDE.zh-CN.md) |
+| Understand capabilities and processing | [System overview](SYSTEM_OVERVIEW.md) | [系统说明](SYSTEM_OVERVIEW.zh-CN.md) |
+| Integrate the API, develop, and test | [Technical guide](TECHNICAL_GUIDE.md) | [技术指南](TECHNICAL_GUIDE.zh-CN.md) |
+| Review completion, evidence, and deferred work | [Project status](PROJECT_STATUS.md) | [项目状态](PROJECT_STATUS.zh-CN.md) |
+| Migrate old callers | [v1-to-v2 migration](V1_TO_V2_MIGRATION.md) | [v1 到 v2 迁移](V1_TO_V2_MIGRATION.zh-CN.md) |
+| Check the historical baseline and recovery references | [Baseline provenance](BASELINE_PROVENANCE.md) | [基线来源与恢复](BASELINE_PROVENANCE.zh-CN.md) |
+| Work on the code with an AI agent | [AI development guidance](../CLAUDE.md) | [AI 开发指引](../CLAUDE.zh-CN.md) |
+
+`main` contains the Alpha snapshot for local core workflows, including the merged v2 work. Exhaustive abnormal scenarios are deferred by user decision; unverified release gates remain unverified. The project status page defines the current scope.
+
+## Language and maintenance
+
+Default filenames without language suffixes are English. Chinese companions use `.zh-CN.md`; the existing root Chinese README keeps `README_zh.md`. Update commands, public defaults, results, and limits in both versions together. English pages link to English guides by default, and Chinese pages to Chinese guides.
+
+## Historical source records
+
+The following are original Chinese execution/review records, not the primary usage documentation or new validation evidence:
+
+- [v2 execution and test plan](AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md).
+- [Frozen LegacyV1 handoff](AI_REFACTOR_HANDOFF.zh-CN.md).
+- [S18 implementation plan](S18_P1_EXECUTABLE_REFACTOR_PLAN.zh-CN.md).
+- [Controlled evidence capture plan](W1B_CONTROLLED_EVIDENCE_CAPTURE_PLAN.zh-CN.md).
+- [Retention manager execution plan](W1B5_RETENTION_MANAGER_EXECUTION_PLAN.zh-CN.md).
+- [Security qualification plan](W1B5_S18_SECURITY_QUALIFICATION_PLAN.zh-CN.md).
+
+Original team reviews remain under `docs/team-sessions/`; evidence indexes and review artifacts remain under `docs/evidence/`. Use the bilingual [project status](PROJECT_STATUS.md) for current conclusions and direct evidence links. Preserve original dates, hashes, and frozen acceptance scope when consulting these records.
