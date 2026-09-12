@@ -2,14 +2,35 @@
 
 ## Copyable prompt for an AI assistant
 
+This prompt identifies the repository even when pasted into a new conversation.
+Replace the input placeholders, or let the assistant ask for the missing files.
+The assistant still needs repository access and a shell to execute the project;
+a local path alone does not give a chat assistant access to your computer.
+
 ```text
 Help me generate an LRC file with AI-auto-lrc v2.
-Repository: <absolute repository path>
+Repository URL: https://github.com/liu-xiaoran/AI-auto-lrc
+Clone URL: https://github.com/liu-xiaoran/AI-auto-lrc.git
+Branch: main
+Primary documentation language: English; Chinese companions are linked on each page.
+Documentation index: https://github.com/liu-xiaoran/AI-auto-lrc/blob/main/docs/README.md
+User guide: https://github.com/liu-xiaoran/AI-auto-lrc/blob/main/docs/USER_GUIDE.md
+Project status: https://github.com/liu-xiaoran/AI-auto-lrc/blob/main/docs/PROJECT_STATUS.md
+
+Local checkout (optional): <absolute repository path, or not cloned yet>
 Lyrics: <absolute UTF-8 lyrics path>
 Audio: <absolute path to the matching recording>
-Output: <absolute path to a new LRC file>
-Read docs/README.md, docs/USER_GUIDE.md and docs/PROJECT_STATUS.md
-first; for integration or edits also read docs/TECHNICAL_GUIDE.md and CLAUDE.md.
+Output (optional): <absolute path to a new LRC file, or propose a new filename>
+
+Identify the project using the exact URL above, not its name alone.
+If a local checkout exists, verify its remote and branch and preserve local changes.
+If it is not cloned and you have shell/network access, clone main into a new directory
+and follow the user guide to prepare Git LFS, dependencies and runtime assets.
+Read the documentation above, or the corresponding files in the verified checkout.
+For integration or edits, also read docs/TECHNICAL_GUIDE.md and CLAUDE.md there.
+If you cannot access the repository, inputs or shell, state the missing capability
+and ask for the required material or provide commands I can run; do not claim execution.
+Treat unfilled placeholders as missing information, not literal paths.
 Check the branch, Python 3.10/3.11, pyproject.toml/uv.lock and all six runtime assets.
 Use the v2 ai-auto-lrc CLI from the project's environment, with explicit paths.
 Start with CPU, MTL, line timestamps, strict completeness and no vocal separation.

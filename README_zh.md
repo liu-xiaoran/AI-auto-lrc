@@ -2,14 +2,34 @@
 
 ## 交给 AI 的使用提示词（复制后替换路径）
 
+下面的提示词包含明确的项目地址，可单独粘贴到新对话。
+请替换输入占位符，也可以让 AI 继续询问缺少的文件。
+实际执行仍需要 AI 能访问仓库并运行终端；仅提供本地路径，不会让普通聊天 AI 自动获得电脑文件访问权限。
+
 ```text
 请帮我使用 AI-auto-lrc v2 生成 LRC。
-项目目录：<项目绝对路径>
+仓库地址：https://github.com/liu-xiaoran/AI-auto-lrc
+克隆地址：https://github.com/liu-xiaoran/AI-auto-lrc.git
+使用分支：main
+主文档语言：英文，每页提供对应中文版本。
+文档导航：https://github.com/liu-xiaoran/AI-auto-lrc/blob/main/docs/README.zh-CN.md
+使用指南：https://github.com/liu-xiaoran/AI-auto-lrc/blob/main/docs/USER_GUIDE.zh-CN.md
+项目状态：https://github.com/liu-xiaoran/AI-auto-lrc/blob/main/docs/PROJECT_STATUS.zh-CN.md
+
+本地项目目录（可选）：<项目绝对路径，或尚未克隆>
 歌词文件：<UTF-8 歌词绝对路径>
 音频文件：<对应歌曲音频绝对路径>
-输出文件：<新的 LRC 绝对路径>
-先阅读 docs/README.zh-CN.md、docs/USER_GUIDE.zh-CN.md、docs/PROJECT_STATUS.zh-CN.md；
-集成或改代码时再读 docs/TECHNICAL_GUIDE.zh-CN.md 和 CLAUDE.zh-CN.md。
+输出文件（可选）：<新的 LRC 绝对路径，或请建议一个新文件名>
+
+请用上面的准确地址识别项目，不要只凭项目名猜测。
+如果已有本地仓库，核对 remote 和分支并保留本地改动。
+如果尚未克隆且你能访问终端和网络，将 main 克隆到新目录，
+按使用指南准备 Git LFS、依赖和运行资产。
+先阅读上面的文档，或已核对的本地仓库中对应文件；
+集成或改代码时，再读该仓库的 docs/TECHNICAL_GUIDE.zh-CN.md 和 CLAUDE.zh-CN.md。
+如果无法访问仓库、输入文件或终端，请说明缺少的能力，
+询问所需材料或给出由我执行的命令，不要声称已经运行。
+未填写的占位符表示信息缺失，不是可直接使用的路径。
 核对当前分支、Python 3.10/3.11、pyproject.toml/uv.lock 及六项运行资产。
 使用 v2 的 ai-auto-lrc CLI；从项目外运行时使用该环境可执行文件。
 默认 CPU、MTL、行级、严格完整、不分离人声，使用规范真实输出路径。
