@@ -1,0 +1,82 @@
+{
+  "case": {
+    "allowed_uses": [
+      "development",
+      "testing",
+      "redistribution"
+    ],
+    "channel_policy": "first",
+    "decoder": "none",
+    "duration_samples": 22050,
+    "generator": "numpy.random.PCG64",
+    "repeat_count": 3,
+    "rights_source": "repository-generated deterministic synthetic waveform",
+    "sample_rate": 22050,
+    "seed": 0,
+    "separation": "none",
+    "waveform_dtype": "float32",
+    "waveform_raw_little_endian_f32_sha256": "cbdcdeb1a232459f5dfcce4a09d8cf54fb119496aacaeb47dd4da76279ab22bc",
+    "waveform_shape": [
+      2,
+      22050
+    ]
+  },
+  "case_id": "NUM-001-NUM-002-legacy-v1-feature",
+  "environment": {
+    "base_image": "python@sha256:8c97ebedc32fd60935cdf5992e935753e2a0f98231830028050e1e04bd3c13c2",
+    "cpu_wheels": {
+      "torch": {
+        "sha256": "bf3ca897f8c7c218dd6c4b1cc5eec57b4f4e71106b0b8120e92f5fdaf4acf6cd",
+        "url": "https://download-r2.pytorch.org/whl/cpu/torch-2.1.2%2Bcpu-cp310-cp310-linux_x86_64.whl"
+      },
+      "torchaudio": {
+        "sha256": "a3f8dab87bc638add9d74d5a6c2e647bdd2e4dabc4caf5213c698e0242a9cab9",
+        "url": "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.1.2%2Bcpu-cp310-cp310-linux_x86_64.whl"
+      }
+    },
+    "device": "cpu",
+    "machine": "x86_64",
+    "mkl_num_threads": "1",
+    "omp_num_threads": "1",
+    "packages": {
+      "numpy": "1.26.3",
+      "torch": "2.1.2+cpu",
+      "torchaudio": "2.1.2+cpu"
+    },
+    "python_implementation": "CPython",
+    "python_version": "3.10.21",
+    "system": "Linux",
+    "torch_cuda_version": null,
+    "torch_intraop_threads": 1
+  },
+  "expected": {
+    "feature_device": "cpu",
+    "feature_dtype": "float32",
+    "feature_finite": true,
+    "feature_raw_little_endian_f32_sha256": "d2905b77c6f59ad415d2f25aa94454ef81b0ac6c87f555ab8fb0523578fd0b04",
+    "feature_shape": [
+      1,
+      1,
+      128,
+      87
+    ],
+    "feature_spec_id": "legacy-v1-mel-22050-128-512-256",
+    "frozen_v1_and_v2_exactly_equal": true,
+    "right_channel_feature_raw_little_endian_f32_sha256": "06e290ed6d3ce97ef5db5481df40c52079d30fdeca6369f51e71d50cc49b2541",
+    "serialization": "C-contiguous little-endian float32 raw bytes",
+    "stereo_and_left_channel_exactly_equal": true
+  },
+  "generated_from_commit": "db8e714eceb73e88496f0f705a56cd8c571e0278",
+  "oracle_id": "legacy-v1-feature-linux-x86_64-cpython310",
+  "provenance": {
+    "baseline_commit": "db8e714eceb73e88496f0f705a56cd8c571e0278",
+    "frozen_source": "t2l/mtl/model.py",
+    "frozen_source_sha256": "a1eab52c310fecff16fd6e200468af57379e5c95fbdb9342e654ff935cc8b8d2",
+    "profile_manifest": "t2l/_assets/legacy_v1_manifest.json",
+    "profile_manifest_sha256": "ec6185216b39ce22236badd4b2587c311710b076f05d83597ba0de1b46424bef",
+    "uv_lock_sha256": "3f20a0afdd3bfa055c7a98c413b305e84aa0a3ad1af2c254b094bb8440cd31eb"
+  },
+  "schema_version": 1,
+  "scope": "feature-only",
+  "status": "canonical"
+}

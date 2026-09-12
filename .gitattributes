@@ -1,0 +1,5 @@
+checkpoints/checkpoint_Baseline filter=lfs diff=lfs merge=lfs -text
+checkpoints/checkpoint_MTL filter=lfs diff=lfs merge=lfs -text
+checkpoints/checkpoint_BDR filter=lfs diff=lfs merge=lfs -text
+lid.176.ftz filter=lfs diff=lfs merge=lfs -text
+*.ftz filter=lfs diff=lfs merge=lfs -text

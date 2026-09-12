@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "file": "sine-440hz-250ms-mono-22050.mp3",
+  "sha256": "55bfeaa909966bef5f8c74ab9e01ac13d2b4e8b17d41bf07ccc44536df250ab8",
+  "size_bytes": 1254,
+  "source": "synthetic sine wave generated for this repository",
+  "rights_source": "project-generated fixture; no third-party recording or composition",
+  "allowed_uses": [
+    "source repository tests",
+    "CI",
+    "redistribution with this repository"
+  ],
+  "generator": {
+    "tool": "ffmpeg",
+    "version": "9.0.1",
+    "command": "ffmpeg -f lavfi -i sine=frequency=440:sample_rate=22050:duration=0.25 -map_metadata -1 -ac 1 -ar 22050 -codec:a libmp3lame -b:a 32k -write_xing 0 -id3v2_version 0 output.mp3"
+  },
+  "encoded_audio": {
+    "frequency_hz": 440,
+    "duration_seconds": 0.25,
+    "channels": 1,
+    "sample_rate": 22050,
+    "bitrate": "32k"
+  },
+  "portable_assertions": {
+    "sample_rate": 22050,
+    "channels": 1,
+    "dtype": "torch.float32",
+    "finite": true,
+    "minimum_decoded_samples": 5512,
+    "maximum_decoded_samples": 6912
+  },
+  "current_host_observation": {
+    "platform": "macOS 26.6.2 arm64",
+    "python": "3.11.4",
+    "torch": "2.1.2",
+    "torchaudio": "2.1.2",
+    "decoded_samples": 6328
+  }
+}

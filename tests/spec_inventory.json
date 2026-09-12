@@ -1,0 +1,293 @@
+{
+  "schema_version": 3,
+  "source_plan": "docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md",
+  "expected_plan_id_count": 274,
+  "default_status": "planned",
+  "default_implemented_qualification": "implemented-unqualified",
+  "qualification_levels": [
+    "implemented-unqualified",
+    "qualified-portable",
+    "qualified-canonical",
+    "qualified-release"
+  ],
+  "qualification_overrides": {
+    "NUM-001": {
+      "status": "qualified-canonical",
+      "scope": "feature-only",
+      "environment_manifest": "tests/golden/legacy_v1_feature_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_feature_golden.py::test_num_001_canonical_mel_matches_frozen_v1_oracle"
+    },
+    "NUM-002": {
+      "status": "qualified-canonical",
+      "scope": "feature-only",
+      "environment_manifest": "tests/golden/legacy_v1_feature_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_feature_golden.py::test_num_002_canonical_mel_uses_only_first_channel"
+    },
+    "NUM-015": {
+      "status": "qualified-canonical",
+      "scope": "checkpoint-numeric-and-rendering",
+      "environment_manifest": "tests/golden/legacy_v1_numeric_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_numeric_golden.py::test_num_015_frozen_v1_and_v2_match_at_all_numeric_extraction_points"
+    },
+    "NUM-016": {
+      "status": "qualified-canonical",
+      "scope": "checkpoint-numeric-and-rendering",
+      "environment_manifest": "tests/golden/legacy_v1_numeric_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_numeric_golden.py::test_num_016_tensor_fingerprints_are_stable_and_explicit"
+    },
+    "GOL-001": {
+      "status": "qualified-canonical",
+      "scope": "real-decoder-public-api-installed-cli",
+      "environment_manifest": "tests/golden/legacy_v1_public_e2e_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_001_real_mp3_baseline_public_api_is_exact"
+    },
+    "GOL-002": {
+      "status": "qualified-canonical",
+      "scope": "real-decoder-public-api-installed-cli",
+      "environment_manifest": "tests/golden/legacy_v1_public_e2e_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_002_real_mp3_mtl_public_api_is_exact"
+    },
+    "GOL-003": {
+      "status": "qualified-canonical",
+      "scope": "real-decoder-public-api-installed-cli",
+      "environment_manifest": "tests/golden/legacy_v1_public_e2e_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_003_real_mp3_mtl_bdr_public_api_is_exact"
+    },
+    "GOL-007": {
+      "status": "qualified-canonical",
+      "scope": "real-decoder-public-api-installed-cli",
+      "environment_manifest": "tests/golden/legacy_v1_public_e2e_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_007_real_mp3_decode_is_pinned_and_offline"
+    },
+    "GOL-008": {
+      "status": "qualified-canonical",
+      "scope": "real-decoder-public-api-installed-cli",
+      "environment_manifest": "tests/golden/legacy_v1_public_e2e_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_008_installed_cli_is_cwd_independent"
+    },
+    "GOL-011": {
+      "status": "qualified-canonical",
+      "scope": "real-decoder-public-api-installed-cli",
+      "environment_manifest": "tests/golden/legacy_v1_public_e2e_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_011_real_mp3_baseline_bdr_public_route_is_exact"
+    },
+    "GOL-012": {
+      "status": "qualified-canonical",
+      "scope": "real-decoder-public-api-installed-cli",
+      "environment_manifest": "tests/golden/legacy_v1_public_e2e_manifest.json",
+      "nodeid": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_012_all_real_public_routes_match_installed_cli"
+    }
+  },
+  "plan_id_ranges": {
+    "ADV": [1, 12],
+    "ALN": [1, 21],
+    "API": [1, 15],
+    "AST": [1, 24],
+    "AUD": [1, 14],
+    "CLI": [1, 28],
+    "CONC": [1, 5],
+    "DOC": [1, 6],
+    "ENC": [1, 6],
+    "GIT": [1, 8],
+    "GOL": [1, 14],
+    "MIG": [1, 7],
+    "NUM": [1, 18],
+    "OFF": [1, 5],
+    "OUT": [1, 9],
+    "PKG": [1, 25],
+    "PORT": [1, 8],
+    "PROP": [1, 10],
+    "REL": [1, 14],
+    "RES": [1, 5],
+    "TXT": [1, 20]
+  },
+  "work_package_specs": {
+    "S18_P1": {
+      "schema_version": 1,
+      "source_plan": "docs/S18_P1_EXECUTABLE_REFACTOR_PLAN.zh-CN.md",
+      "source_section": "19.2",
+      "specs": [
+        {
+          "full_id": "S18-ABA-001",
+          "implementation_status": "planned",
+          "verification_status": "unverified",
+          "qualification_status": "unqualified",
+          "runner_scope": ["host"],
+          "target_scope": ["capture"],
+          "nodeids": [],
+          "evidence_refs": []
+        },
+        {
+          "full_id": "S18-CLAIM-001",
+          "implementation_status": "planned",
+          "verification_status": "unverified",
+          "qualification_status": "unqualified",
+          "runner_scope": ["host"],
+          "target_scope": ["capture"],
+          "nodeids": [],
+          "evidence_refs": []
+        },
+        {
+          "full_id": "S18-COV-015",
+          "implementation_status": "implemented",
+          "verification_status": "unverified",
+          "qualification_status": "unqualified",
+          "runner_scope": ["host"],
+          "target_scope": ["capture"],
+          "nodeids": [
+            "tests/contract/test_security_coverage_gate.py::test_s18_runner_rejects_target_test_drift_during_pytest"
+          ],
+          "evidence_refs": []
+        },
+        {
+          "full_id": "S18-JUNIT-001",
+          "implementation_status": "implemented",
+          "verification_status": "unverified",
+          "qualification_status": "unqualified",
+          "runner_scope": ["host"],
+          "target_scope": ["capture"],
+          "nodeids": [
+            "tests/contract/test_security_coverage_gate.py::test_s18_gate_rejects_forged_junit_classname"
+          ],
+          "evidence_refs": []
+        },
+        {
+          "full_id": "S18-JUNIT-002",
+          "implementation_status": "implemented",
+          "verification_status": "unverified",
+          "qualification_status": "unqualified",
+          "runner_scope": ["host"],
+          "target_scope": ["capture"],
+          "nodeids": [
+            "tests/contract/test_security_coverage_gate.py::test_s18_gate_rejects_noncanonical_junit_name"
+          ],
+          "evidence_refs": []
+        },
+        {
+          "full_id": "S18-SRC-001",
+          "implementation_status": "implemented",
+          "verification_status": "unverified",
+          "qualification_status": "unqualified",
+          "runner_scope": ["host"],
+          "target_scope": ["capture"],
+          "nodeids": [
+            "tests/contract/test_security_coverage_gate.py::test_s18_manifest_symbol_and_hash_use_same_frozen_source_bytes"
+          ],
+          "evidence_refs": []
+        },
+        {
+          "full_id": "S18-XFAIL-001",
+          "implementation_status": "implemented",
+          "verification_status": "unverified",
+          "qualification_status": "unqualified",
+          "runner_scope": ["host"],
+          "target_scope": ["capture"],
+          "nodeids": [
+            "tests/contract/test_security_coverage_gate.py::test_s18_real_runner_enforces_required_xfail_and_xpass[B3E-XFAIL-REQUIRED]",
+            "tests/contract/test_security_coverage_gate.py::test_s18_real_runner_enforces_required_xfail_and_xpass[B3E-XPASS-NONSTRICT]",
+            "tests/contract/test_security_coverage_gate.py::test_s18_real_runner_enforces_required_xfail_and_xpass[B3E-XPASS-STRICT]"
+          ],
+          "evidence_refs": []
+        }
+      ]
+    }
+  },
+  "ignored_non_spec_tokens": ["SHA-256"],
+  "implemented": {
+    "ALN-021": "tests/component/test_natural_partial_backend.py::test_aln_021_natural_bdr_backtrack_exhaustion_is_structured",
+    "API-009": "tests/unit/test_audio_adapter.py::test_torchaudio_failure_does_not_implicitly_fallback",
+    "API-010": "tests/component/test_natural_partial_backend.py::test_api_010_unknown_index_error_is_not_misclassified_as_partial",
+    "API-015": "tests/unit/test_v2_usecase.py::test_api_015_diagnostics_from_each_source_appear_exactly_once",
+    "AST-006": "tests/component/test_offline_g2p_runtime.py::test_ast_006_explicit_root_bad_g2p_hash_fails_before_g2p",
+    "AST-016": "tests/component/test_checkpoint_manifest.py::test_ast_016_checkpoint_snapshot_survives_replacement_and_in_place_races",
+    "AST-017": "tests/component/test_offline_g2p_runtime.py::test_ast_017_explicit_root_missing_g2p_asset_fails_on_first_prepare",
+    "AST-018": "tests/component/test_offline_g2p_runtime.py::test_ast_018_lid_is_pinned_by_the_package_manifest",
+    "AST-019": "tests/contract/test_composition.py::test_ast_019_compatibility_fails_before_asset_or_model_loading",
+    "AST-020": "tests/unit/test_asset_locator.py::test_ast_020_materialized_asset_set_publishes_only_complete_versions",
+    "AST-024": "tests/component/test_offline_g2p_runtime.py::test_ast_024_manifest_pins_complete_offline_g2p_assets",
+    "AUD-001": "tests/component/test_real_audio_decoding.py::test_aud_001_real_mono_pcm16_wav_is_channel_first_float32",
+    "AUD-002": "tests/component/test_real_audio_decoding.py::test_aud_002_real_stereo_pcm16_wav_preserves_channel_order",
+    "AUD-003": "tests/component/test_real_audio_decoding.py::test_aud_003_real_44100_wav_resamples_to_exact_half_length",
+    "AUD-004": "tests/component/test_real_audio_decoding.py::test_aud_004_fixed_real_mp3_uses_torchaudio_without_librosa_fallback",
+    "AUD-005": "tests/unit/test_audio_adapter.py::test_torchaudio_failure_does_not_implicitly_fallback",
+    "AUD-006": "tests/unit/test_audio_adapter.py::test_librosa_mono_is_explicit_and_normalizes_rank",
+    "AUD-007": "tests/unit/test_audio_adapter.py::test_invalid_audio_fails_before_inference[AUD-007]",
+    "AUD-008": "tests/unit/test_audio_adapter.py::test_invalid_audio_fails_before_inference[AUD-008]",
+    "AUD-009": "tests/unit/test_audio_adapter.py::test_aud_009_default_audio_path_never_imports_demucs",
+    "AUD-010": "tests/unit/test_audio_adapter.py::test_missing_demucs_extra_is_a_stable_domain_error",
+    "AUD-011": "tests/unit/test_audio_adapter.py::test_aud_011_missing_vocals_fails_before_final_resample",
+    "AUD-012": "tests/unit/test_audio_adapter.py::test_aud_012_demucs_bag_index_selection_and_validation",
+    "AUD-013": "tests/unit/test_audio_adapter.py::test_demucs_adapter_uses_eval_and_inference_mode",
+    "CLI-001": "tests/package/test_wheel_metadata.py::test_cli_001_cli_002_installed_console_script_uses_one_output_target",
+    "CLI-002": "tests/package/test_wheel_metadata.py::test_cli_001_cli_002_installed_console_script_uses_one_output_target",
+    "CLI-003": "tests/contract/test_cli_contract.py::test_cli_003_verbose_reports_stable_observer_events_only_to_stderr",
+    "CLI-011": "tests/contract/test_cli_contract.py::test_cli_011_unknown_exception_uses_generic_code_one_message",
+    "CLI-012": "tests/contract/test_cli_contract.py::test_cli_012_debug_traceback_redacts_secrets_control_characters_and_paths",
+    "CLI-020": "tests/contract/test_cli_contract.py::test_cli_020_output_cannot_replace_lyrics_input",
+    "CLI-021": "tests/contract/test_cli_contract.py::test_cli_021_output_cannot_replace_audio_input",
+    "CLI-022": "tests/contract/test_cli_contract.py::test_cli_022_partial_file_output_is_atomic_and_stdout_is_empty",
+    "CLI-023": "tests/contract/test_cli_subprocess.py::test_cli_023_sigint_before_replace_returns_130_and_preserves_target",
+    "CLI-024": "tests/contract/test_cli_subprocess.py::test_cli_024_closed_stdout_returns_141_without_secondary_error",
+    "CLI-025": "tests/contract/test_cli_contract.py::test_cli_025_output_mode_is_secure_for_new_and_replaced_files",
+    "CLI-026": "tests/contract/test_cli_contract.py::test_cli_026_non_regular_and_symlink_outputs_are_rejected",
+    "CLI-027": "tests/contract/test_cli_subprocess.py::test_cli_027_c_locale_preserves_unicode_paths_lyrics_and_stdout",
+    "CLI-028": "tests/package/test_wheel_metadata.py::test_wheel_installs_and_cli_help_runs_outside_the_source_tree",
+    "CONC-001": "tests/component/test_runtime_concurrency.py::test_conc_001_four_routes_initialize_each_runtime_resource_once",
+    "CONC-002": "tests/component/test_runtime_concurrency.py::test_conc_002_same_runtime_serializes_but_distinct_runtimes_overlap",
+    "CONC-003": "tests/component/test_runtime_concurrency.py::test_conc_003_model_initialization_failure_is_cached_per_runtime",
+    "CONC-004": "tests/component/test_runtime_concurrency.py::test_conc_004_interleaved_seeds_are_local_and_preserve_global_rng",
+    "CONC-005": "tests/component/test_runtime_concurrency.py::test_conc_005_sigint_interrupts_lock_wait_without_poisoning_runtime",
+    "DOC-001": "tests/contract/test_document_links.py::test_doc_001_internal_markdown_links_and_anchors_resolve",
+    "DOC-003": "tests/contract/test_migration_contract.py::test_doc_003_readmes_migration_defaults_and_profile_stay_aligned",
+    "GOL-001": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_001_real_mp3_baseline_public_api_is_exact",
+    "GOL-002": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_002_real_mp3_mtl_public_api_is_exact",
+    "GOL-003": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_003_real_mp3_mtl_bdr_public_api_is_exact",
+    "GOL-007": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_007_real_mp3_decode_is_pinned_and_offline",
+    "GOL-008": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_008_installed_cli_is_cwd_independent",
+    "GOL-011": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_011_real_mp3_baseline_bdr_public_route_is_exact",
+    "GOL-012": "tests/golden/test_legacy_v1_public_e2e_golden.py::test_gol_012_all_real_public_routes_match_installed_cli",
+    "MIG-001": "tests/contract/test_migration_contract.py::test_mig_001_every_v1_cli_argument_has_one_explicit_disposition",
+    "MIG-003": "tests/contract/test_migration_contract.py::test_mig_003_documented_defaults_match_cli_and_public_dataclasses",
+    "MIG-004": "tests/contract/test_migration_contract.py::test_mig_004_removed_v1_modules_fail_and_document_v2_replacements",
+    "NUM-001": "tests/golden/test_legacy_v1_feature_golden.py::test_num_001_canonical_mel_matches_frozen_v1_oracle",
+    "NUM-002": "tests/golden/test_legacy_v1_feature_golden.py::test_num_002_canonical_mel_uses_only_first_channel",
+    "NUM-015": "tests/golden/test_legacy_v1_numeric_golden.py::test_num_015_frozen_v1_and_v2_match_at_all_numeric_extraction_points",
+    "NUM-016": "tests/golden/test_legacy_v1_numeric_golden.py::test_num_016_tensor_fingerprints_are_stable_and_explicit",
+    "NUM-018": "tests/component/test_legacy_v1_model.py::test_num_018_success_and_known_failures_preserve_caller_rng",
+    "OFF-001": "tests/unit/test_offline_g2p.py::test_off_001_missing_nltk_assets_fail_before_g2p_import",
+    "OFF-004": "tests/contract/test_composition.py::test_off_004_runtime_creation_does_not_import_g2p_or_read_nltk_archives",
+    "OFF-005": "tests/component/test_offline_g2p_runtime.py::test_off_005_real_g2p_succeeds_with_empty_caches_and_network_fuses",
+    "OUT-006": "tests/unit/test_atomic_lrc_sink.py::test_failure_without_an_existing_target_leaves_no_partial_file",
+    "OUT-007": "tests/unit/test_atomic_lrc_sink.py::test_symlink_target_is_rejected_without_touching_link_target",
+    "OUT-008": "tests/unit/test_atomic_lrc_sink.py::test_concurrent_writes_never_produce_partial_or_mixed_bytes",
+    "OUT-009": "tests/unit/test_atomic_lrc_sink.py::test_serializer_emits_exactly_one_trailing_newline",
+    "PKG-001": "tests/package/test_wheel_metadata.py::test_pyproject_declares_separate_test_and_dev_groups",
+    "PKG-002": "tests/package/test_wheel_metadata.py::test_wheel_metadata_and_asset_exclusions",
+    "PKG-003": "tests/package/test_wheel_metadata.py::test_wheel_installs_and_cli_help_runs_outside_the_source_tree",
+    "PKG-004": "tests/package/test_wheel_metadata.py::test_wheel_installs_and_cli_help_runs_outside_the_source_tree",
+    "PKG-005": "tests/package/test_wheel_metadata.py::test_pyproject_declares_separate_test_and_dev_groups",
+    "PKG-006": "tests/contract/test_dependency_boundaries.py::test_pkg_006_domain_and_application_keep_dependency_direction",
+    "PKG-010": "tests/package/test_wheel_metadata.py::test_wheel_metadata_and_asset_exclusions",
+    "PKG-011": "tests/package/test_wheel_metadata.py::test_wheel_metadata_and_asset_exclusions",
+    "PKG-012": "tests/package/test_offline_wheelhouse.py::test_pkg_012_pkg_017_macos_cold_install_and_tags",
+    "PKG-013": "tests/package/test_offline_wheelhouse.py::test_pkg_013_pkg_014_pkg_015_cold_offline_sdist_build[PKG-013]",
+    "PKG-014": "tests/package/test_offline_wheelhouse.py::test_pkg_013_pkg_014_pkg_015_cold_offline_sdist_build[PKG-014]",
+    "PKG-015": "tests/package/test_offline_wheelhouse.py::test_pkg_013_pkg_014_pkg_015_cold_offline_sdist_build[PKG-015]",
+    "PKG-016": "tests/contract/test_dependency_sources.py::test_pkg_016_lock_rejects_mutable_sources_and_unhashed_artifacts",
+    "PKG-017": "tests/package/test_offline_wheelhouse.py::test_pkg_012_pkg_017_macos_cold_install_and_tags",
+    "PKG-018": "tests/package/test_offline_wheelhouse.py::test_pkg_018_wheelhouse_policy_and_manifest_are_complete",
+    "PKG-019": "tests/package/test_offline_wheelhouse.py::test_pkg_019_linux_cold_install",
+    "PKG-020": "tests/contract/test_dependency_sources.py::test_pkg_020_pyproject_and_uv_lock_are_the_only_dependency_inputs",
+    "PKG-021": "tests/package/test_wheel_metadata.py::test_pkg_021_tree_and_sdist_wheels_have_equivalent_publishable_contents",
+    "PKG-022": "tests/package/test_wheel_metadata.py::test_pkg_022_repeated_builds_have_identical_normalized_contents",
+    "PKG-023": "tests/package/test_wheel_metadata.py::test_pkg_023_isolated_import_uses_installed_wheel_from_read_only_cwd",
+    "PKG-024": "tests/package/test_wheel_metadata.py::test_pkg_024_hostile_cwd_cannot_override_installed_wheel_or_assets",
+    "PKG-025": "tests/package/test_wheel_metadata.py::test_pkg_025_installed_wheel_prepares_real_lyrics_from_external_asset_root",
+    "PORT-005": "tests/contract/test_application_ports.py::test_port_005_lyrics_port_returns_one_self_contained_plan",
+    "PORT-008": "tests/contract/test_application_ports.py::test_port_008_null_is_silent_and_cli_serializes_only_stable_events",
+    "RES-001": "tests/unit/test_alignment_budget.py::test_res_001_exact_torch_dtw_budget_passes_and_one_byte_less_fails",
+    "RES-002": "tests/unit/test_alignment_budget.py::test_res_002_exact_numpy_bdr_budget_rejects_before_dp_allocation",
+    "TXT-019": "tests/unit/test_offline_g2p.py::test_legacy_phone_encoder_preserves_phone_and_half_open_span_layout",
+    "TXT-020": "tests/unit/test_offline_g2p.py::test_txt_020_concurrent_first_use_initializes_one_runtime_g2p"
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "profile_id": "legacy-v1",
+  "compatibility": {
+    "distribution": "ai-auto-lrc",
+    "package_version": "2.0.0a0",
+    "profile_id": "legacy-v1",
+    "profile_contract_version": 1
+  },
+  "feature_spec": {
+    "id": "legacy-v1-mel-22050-128-512-256",
+    "sample_rate": 22050,
+    "n_mels": 128,
+    "n_fft": 512,
+    "win_length": 512,
+    "hop_length": 256,
+    "power": 2.0,
+    "center": true,
+    "pad_mode": "reflect",
+    "normalized": false,
+    "mel_scale": "htk"
+  },
+  "phone_inventory_id": "legacy-arpabet-41-blank-40",
+  "frame_clock": {
+    "numerator": 768,
+    "denominator": 22050
+  },
+  "lstm_batch_first": [true, false, false],
+  "architectures": {
+    "legacy-v1-acoustic-baseline": {
+      "kind": "acoustic",
+      "n_cnn_layers": 1,
+      "rnn_dim": 256,
+      "n_feats": 32,
+      "stride": 1,
+      "dropout": 0.1,
+      "output_classes": [41]
+    },
+    "legacy-v1-acoustic-mtl": {
+      "kind": "acoustic",
+      "n_cnn_layers": 1,
+      "rnn_dim": 256,
+      "n_feats": 32,
+      "stride": 1,
+      "dropout": 0.1,
+      "output_classes": [41, 47]
+    },
+    "legacy-v1-boundary": {
+      "kind": "boundary",
+      "n_cnn_layers": 1,
+      "rnn_dim": 32,
+      "n_feats": 32,
+      "stride": 1,
+      "dropout": 0.1,
+      "output_classes": [1]
+    }
+  },
+  "checkpoints": {
+    "Baseline": {
+      "profile_id": "legacy-v1",
+      "relative_path": "checkpoints/checkpoint_Baseline",
+      "sha256": "b420ea97032691b3f51e271c0b688a85e168d7b7ee89baf6725f601ccd07bb45",
+      "size_bytes": 57289716,
+      "architecture_id": "legacy-v1-acoustic-baseline",
+      "feature_spec_id": "legacy-v1-mel-22050-128-512-256",
+      "phone_inventory_id": "legacy-arpabet-41-blank-40",
+      "state_dict_key_count": 38,
+      "state_dict_signature_sha256": "066301760b4c1c4b039db991a88e09573ca3ce817769b300ad093f2ca2c58063",
+      "source": "LyricsAlignment-MTL (ICASSP 2022)",
+      "license": "See t2l/mtl/LICENSE; checkpoint rights require maintainer confirmation"
+    },
+    "MTL": {
+      "profile_id": "legacy-v1",
+      "relative_path": "checkpoints/checkpoint_MTL",
+      "sha256": "826559e7e810bf8f90223d8fd5c66525c01ad4dd9cdc19d019f39f784e7ed3c1",
+      "size_bytes": 68900020,
+      "architecture_id": "legacy-v1-acoustic-mtl",
+      "feature_spec_id": "legacy-v1-mel-22050-128-512-256",
+      "phone_inventory_id": "legacy-arpabet-41-blank-40",
+      "state_dict_key_count": 38,
+      "state_dict_signature_sha256": "b7d60807b4ea63cc4af494ca4aff71e0092cb086cc7a72eb2bc23b93fdcd17fe",
+      "source": "LyricsAlignment-MTL (ICASSP 2022)",
+      "license": "See t2l/mtl/LICENSE; checkpoint rights require maintainer confirmation"
+    },
+    "BDR": {
+      "profile_id": "legacy-v1",
+      "relative_path": "checkpoints/checkpoint_BDR",
+      "sha256": "a3955b290311bec16f04253eac328147d444f275f263315490ec5faf1a668fc9",
+      "size_bytes": 1858932,
+      "architecture_id": "legacy-v1-boundary",
+      "feature_spec_id": "legacy-v1-mel-22050-128-512-256",
+      "phone_inventory_id": "legacy-arpabet-41-blank-40",
+      "state_dict_key_count": 38,
+      "state_dict_signature_sha256": "ca18cc923cabed572bf2bea06f29342c87df056254fc96a0c1aa4d8905c72c6d",
+      "source": "LyricsAlignment-MTL (ICASSP 2022)",
+      "license": "See t2l/mtl/LICENSE; checkpoint rights require maintainer confirmation"
+    }
+  },
+  "runtime_assets": {
+    "lid-fasttext-176": {
+      "relative_path": "lid.176.ftz",
+      "sha256": "8f3472cfe8738a7b6099e8e999c3cbfae0dcd15696aac7d7738a8039db603e83",
+      "size_bytes": 938013,
+      "source": "https://dl.fbaipublicfiles.com/fasttext/supervised-models/lid.176.ftz",
+      "license": "CC-BY-SA 3.0 per upstream fastText model page; redistribution review pending"
+    },
+    "nltk-averaged-perceptron-tagger": {
+      "relative_path": "assets/nltk_data/taggers/averaged_perceptron_tagger.zip",
+      "sha256": "e1f13cf2532daadfd6f3bc481a49859f0b8ea6432ccdcd83e6a49a5f19008de9",
+      "size_bytes": 2526731,
+      "source": "https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/taggers/averaged_perceptron_tagger.zip",
+      "license": "MIT License"
+    },
+    "nltk-cmudict": {
+      "relative_path": "assets/nltk_data/corpora/cmudict.zip",
+      "sha256": "d07cca47fd72ad32ea9d8ad1219f85301eeaf4568f8b6b73747506a71fb5afd6",
+      "size_bytes": 896069,
+      "source": "https://raw.githubusercontent.com/nltk/nltk_data/gh-pages/packages/corpora/cmudict.zip",
+      "license": "CMU Pronouncing Dictionary: unrestricted research/commercial use; acknowledgement requested"
+    }
+  }
+}

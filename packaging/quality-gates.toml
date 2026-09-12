@@ -1,0 +1,95 @@
+schema_version = 1
+
+[coverage]
+source_root = "t2l"
+overall_line_percent = 80
+diff_line_percent = 90
+excluded_paths = [
+  "t2l/mtl/model.py",
+  "t2l/mtl/utils.py",
+]
+
+[[critical_targets]]
+category = "cli-output"
+path = "t2l/adapters/cli.py"
+function = "_write_stdout"
+
+[[critical_targets]]
+category = "cli-output"
+path = "t2l/adapters/cli.py"
+function = "main"
+
+[[critical_targets]]
+category = "strict-partial"
+path = "t2l/application/align_lyrics.py"
+function = "CompletenessPolicy.validate"
+
+[[critical_targets]]
+category = "asset-validation"
+path = "t2l/adapters/assets.py"
+function = "AssetSpec.__post_init__"
+
+[[critical_targets]]
+category = "asset-validation"
+path = "t2l/adapters/assets.py"
+function = "AssetLocator.resolve"
+
+[[critical_targets]]
+category = "asset-validation"
+path = "t2l/adapters/assets.py"
+function = "AssetLocator.materialize_set"
+
+[[critical_targets]]
+category = "asset-validation"
+path = "t2l/adapters/assets.py"
+function = "AssetLocator._verified_snapshot"
+
+[[critical_targets]]
+category = "asset-validation"
+path = "t2l/adapters/assets.py"
+function = "AssetLocator._selected_root"
+
+[[critical_targets]]
+category = "asset-validation"
+path = "t2l/adapters/assets.py"
+function = "_reject_lfs_pointer"
+
+[[critical_targets]]
+category = "atomic-output"
+path = "t2l/adapters/output.py"
+function = "_validate_destination"
+
+[[critical_targets]]
+category = "atomic-output"
+path = "t2l/adapters/output.py"
+function = "serialize_lrc"
+
+[[critical_targets]]
+category = "atomic-output"
+path = "t2l/adapters/output.py"
+function = "AtomicLrcSink.write"
+
+[[critical_targets]]
+category = "optional-dependency-error"
+path = "t2l/adapters/audio.py"
+function = "AudioPreparationAdapter.prepare"
+
+[[critical_targets]]
+category = "optional-dependency-error"
+path = "t2l/adapters/audio.py"
+function = "AudioPreparationAdapter._normalize"
+
+[pytest_layers.portable]
+allowed_classname_prefixes = ["tests.unit.", "tests.contract.", "tests.component."]
+required_markers = ["component"]
+zero_skip = true
+
+[pytest_layers.package]
+allowed_classname_prefixes = ["tests.package."]
+required_markers = ["package"]
+zero_skip = true
+
+[pytest_layers.canonical]
+allowed_classname_prefixes = ["tests.golden."]
+required_markers = ["golden"]
+zero_skip = true

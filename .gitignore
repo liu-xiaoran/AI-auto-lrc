@@ -1,0 +1,20 @@
+**/__pycache__
+.claude/worktrees/
+.pytest_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints
+generate
+.idea
+.vscode
+demofile/mdx_q
+demofile/mdx_extra
+
+# Local environments and generated build/test/output artifacts
+.venv/
+*.egg-info/
+build/
+dist/
+.ruff_cache/
+.coverage.*
+/output/

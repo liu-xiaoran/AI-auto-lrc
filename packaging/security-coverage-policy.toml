@@ -1,0 +1,66 @@
+schema_version = 3
+
+[thresholds]
+coverage_combined_percent = 80
+statement_line_percent = 80
+branch_percent = 80
+critical_line_percent = 100
+critical_branch_percent = 100
+zero_required_skip = true
+
+[limits]
+coverage_bytes = 8388608
+junit_bytes = 8388608
+pytest_events_bytes = 8388608
+pytest_events_nodeid_bytes = 4096
+plugin_identity_bytes = 4194304
+runtime_metadata_bytes = 262144
+runtime_record_bytes = 262144
+runtime_required_entry_bytes = 1048576
+runtime_pyvenv_cfg_bytes = 16384
+environment_bytes = 65536
+command_bytes = 65536
+run_manifest_bytes = 65536
+capabilities = 64
+targets_per_capability = 2
+symbols_per_target = 32
+requirements_per_target = 64
+testcases = 4096
+
+[scripts.capture]
+module = "scripts.capture_test_gate"
+path = "scripts/capture_test_gate.py"
+test_file = "tests/contract/test_evidence_capture.py"
+
+[scripts.retention]
+module = "scripts.manage_evidence_retention"
+path = "scripts/manage_evidence_retention.py"
+test_file = "tests/contract/test_evidence_retention.py"
+
+[runners.macos]
+system = "Darwin"
+machines = ["arm64", "x86_64"]
+python_implementation = "CPython"
+python_major_minor = "3.11"
+
+[runtime]
+provenance = "installed-record-consistent"
+named_distributions = ["coverage", "pluggy", "pytest", "pytest-cov"]
+python_flags = ["-I", "-S", "-B"]
+uv_run_flags = ["--offline", "--frozen", "--no-sync"]
+
+[runtime.required_entries]
+coverage = ["coverage/__init__.py"]
+pluggy = ["pluggy/__init__.py"]
+pytest = ["pytest/__init__.py"]
+pytest-cov = ["pytest_cov/__init__.py", "pytest_cov/plugin.py"]
+
+[runtime.required_dependencies]
+pytest = ["pluggy"]
+pytest-cov = ["coverage", "pluggy", "pytest"]
+
+[runners.linux]
+system = "Linux"
+machines = ["x86_64"]
+python_implementation = "CPython"
+python_major_minor = "3.11"

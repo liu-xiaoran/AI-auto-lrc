@@ -1,0 +1,905 @@
+{
+  "case_id": "GOL-001-GOL-002-GOL-003-GOL-007-GOL-008-GOL-011-GOL-012-public-e2e",
+  "cwd_independence": {
+    "exactly_equal": true,
+    "outside_repository_stdout_sha256": "1e40af44995c359d42fb96244103f99f54d945aa7a34d73323a918ab21f5c9fe",
+    "repository_root_stdout_sha256": "1e40af44995c359d42fb96244103f99f54d945aa7a34d73323a918ab21f5c9fe",
+    "route": "MTL"
+  },
+  "decoder": {
+    "dispatcher_available_backends": [
+      "soundfile"
+    ],
+    "effective_backend": "soundfile (only available dispatcher backend)",
+    "libsndfile_version": "1.2.0",
+    "policy": "torchaudio",
+    "soundfile_version": "0.12.1",
+    "torchaudio_version": "2.1.2+cpu"
+  },
+  "demucs": {
+    "modules_after": [],
+    "modules_before": [],
+    "requested": false
+  },
+  "distribution": {
+    "console_entry_point": "t2l.adapters.cli:main",
+    "name": "ai-auto-lrc",
+    "version": "2.0.0a0"
+  },
+  "environment": {
+    "base_image": "python@sha256:8c97ebedc32fd60935cdf5992e935753e2a0f98231830028050e1e04bd3c13c2",
+    "cli_torch_cpp_log_level": "ERROR",
+    "cpu_wheels": {
+      "torch": {
+        "sha256": "bf3ca897f8c7c218dd6c4b1cc5eec57b4f4e71106b0b8120e92f5fdaf4acf6cd",
+        "url": "https://download-r2.pytorch.org/whl/cpu/torch-2.1.2%2Bcpu-cp310-cp310-linux_x86_64.whl"
+      },
+      "torchaudio": {
+        "sha256": "a3f8dab87bc638add9d74d5a6c2e647bdd2e4dabc4caf5213c698e0242a9cab9",
+        "url": "https://download-r2.pytorch.org/whl/cpu/torchaudio-2.1.2%2Bcpu-cp310-cp310-linux_x86_64.whl"
+      }
+    },
+    "device": "cpu",
+    "machine": "x86_64",
+    "mkl_num_threads": "1",
+    "network": "docker --network none plus socket denial guards",
+    "omp_num_threads": "1",
+    "packages": {
+      "numpy": "1.26.3",
+      "soundfile": "0.12.1",
+      "torch": "2.1.2+cpu",
+      "torchaudio": "2.1.2+cpu"
+    },
+    "python_version": "3.10.21",
+    "system": "Linux",
+    "torch_cuda_version": null,
+    "torch_intraop_threads": 1
+  },
+  "generated_from_commit": "db8e714eceb73e88496f0f705a56cd8c571e0278",
+  "input": {
+    "allowed_uses": [
+      "source repository tests",
+      "CI",
+      "redistribution with this repository"
+    ],
+    "encoded_audio": {
+      "bitrate": "32k",
+      "channels": 1,
+      "duration_seconds": 0.25,
+      "frequency_hz": 440,
+      "sample_rate": 22050
+    },
+    "encoded_sha256": "55bfeaa909966bef5f8c74ab9e01ac13d2b4e8b17d41bf07ccc44536df250ab8",
+    "encoded_size_bytes": 1254,
+    "file": "tests/fixtures/audio/sine-440hz-250ms-mono-22050.mp3",
+    "generator": {
+      "command": "ffmpeg -f lavfi -i sine=frequency=440:sample_rate=22050:duration=0.25 -map_metadata -1 -ac 1 -ar 22050 -codec:a libmp3lame -b:a 32k -write_xing 0 -id3v2_version 0 output.mp3",
+      "tool": "ffmpeg",
+      "version": "9.0.1"
+    },
+    "lyrics_utf8": "a\n",
+    "lyrics_utf8_sha256": "87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7",
+    "repeat_count": 3,
+    "rights_source": "project-generated fixture; no third-party recording or composition",
+    "seed": 0,
+    "separation": "none",
+    "source": "synthetic sine wave generated for this repository"
+  },
+  "oracle_id": "legacy-v1-real-mp3-public-api-installed-cli-linux-x86_64-cpython310",
+  "profile": {
+    "feature_spec_id": "legacy-v1-mel-22050-128-512-256",
+    "frame_clock": [
+      768,
+      22050
+    ],
+    "phone_inventory_id": "legacy-arpabet-41-blank-40",
+    "profile_id": "legacy-v1"
+  },
+  "provenance": {
+    "api_source_sha256": "99389bcfb33461352748253955a4ec85395fa89588dd2a4c0d7fcb58571a01a5",
+    "audio_adapter_sha256": "aeb7d4f494e09be2575c3e15a14ea68a8ae845ac561049a26e2e1e6acbc2403b",
+    "candidate_source_sha256": "bf974cb6525556fd32b7389330e289a5159fdda53b0d5200009ee637b3bf313e",
+    "candidate_worktree_state": "dirty",
+    "cli_source_sha256": "2ae3ff81d72238d32612d6be158b8ff8883fb61164a132d5d0cdd48029ab1784",
+    "composition_source_sha256": "a5e1a0b08baeb1c325037dce192698e73e2093ab4f1f17af6dca613a97715f82",
+    "fixture_metadata_sha256": "9a1e977c58f66eaa47e9207a3b57af1bcefb40ac87a001bfe606bb8664a52cff",
+    "inference_adapter_sha256": "9be83ecf70979e83a1e471a05a4576dec1816e85cdb304d9e5b0efc9294915d1",
+    "lyrics_adapter_sha256": "9088ac14afa66a6d2f44e4a98f14fd3f228be307101d30dcb6dbbc329b8cbad7",
+    "profile_manifest_sha256": "ec6185216b39ce22236badd4b2587c311710b076f05d83597ba0de1b46424bef",
+    "provenance_scope": "canonical functional evidence; not clean release provenance",
+    "uv_lock_sha256": "3f20a0afdd3bfa055c7a98c413b305e84aa0a3ad1af2c254b094bb8440cd31eb"
+  },
+  "routes": {
+    "Baseline": {
+      "architecture_id": "legacy-v1-acoustic-baseline",
+      "boundary_checkpoint_sha256": null,
+      "checkpoint_sha256": "b420ea97032691b3f51e271c0b688a85e168d7b7ee89baf6725f601ccd07bb45",
+      "installed_cli": {
+        "command": [
+          "ai-auto-lrc",
+          "<lyrics.txt>",
+          "<fixture.mp3>",
+          "--asset-root",
+          "<repository-root>",
+          "--device",
+          "cpu",
+          "--decoder",
+          "torchaudio",
+          "--acoustic-model",
+          "Baseline",
+          "--timestamps",
+          "line"
+        ],
+        "entry_point": "installed ai-auto-lrc console script",
+        "exit_code": 0,
+        "network_attempted": false,
+        "stderr": "",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout": "[00:00.069]a\n",
+        "stdout_sha256": "1e40af44995c359d42fb96244103f99f54d945aa7a34d73323a918ab21f5c9fe",
+        "t2l_import_origin": "/workspace/.venv/lib/python3.10/site-packages/t2l/__init__.py",
+        "t2l_imported_from_installed_site_packages": true,
+        "working_directory": "outside-repository"
+      },
+      "model_name": "Baseline",
+      "python_api": {
+        "boundary": null,
+        "config": {
+          "asset_root": "/workspace",
+          "decoder": "torchaudio",
+          "device": "cpu",
+          "offline": true,
+          "seed": 0
+        },
+        "decoded_audio": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "metadata": {
+            "channel_policy": "preserve",
+            "decoder": "torchaudio",
+            "separated_vocals": false
+          },
+          "raw_little_endian_f32_sha256": "7fd29c3be04ae2bda8f86ad5eae90d46235b7e09e19d0d767aaf4f2772be0367",
+          "sample_rate": 22050,
+          "shape": [
+            1,
+            6912
+          ]
+        },
+        "entry_point": "t2l.process(request, runtime=t2l.create_runtime(config))",
+        "features": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "58e8aff4036d35ec2c1114a55bf8cacd216dfea566cb8df60dc5719871e35be5",
+          "shape": [
+            1,
+            1,
+            128,
+            28
+          ]
+        },
+        "lyrics_plan": {
+          "diagnostics": [],
+          "line_spans": [
+            [
+              0,
+              1
+            ]
+          ],
+          "lines": [
+            [
+              "a"
+            ]
+          ],
+          "phones": [
+            "AH"
+          ],
+          "phonetics": [
+            [
+              "a"
+            ]
+          ],
+          "pre_lines_unprocessed": "",
+          "tokens": [
+            {
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "word_spans": [
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "posterior": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "08ab8266cf0fada4c5ac8a64ff6daffbcd9d4072140657bb79d26ec146a85e8b",
+          "shape": [
+            9,
+            41
+          ]
+        },
+        "request": {
+          "acoustic_model": "Baseline",
+          "allow_partial": false,
+          "audio_path": "tests/fixtures/audio/sine-440hz-250ms-mono-22050.mp3",
+          "lyrics": [
+            "a"
+          ],
+          "timestamp_mode": "line",
+          "vocal_separation": null
+        },
+        "result": {
+          "aligned_token_count": 1,
+          "diagnostics": [],
+          "expected_token_count": 1,
+          "lrc": "[00:00.069]a",
+          "lrc_sha256": "bfa173cfd164a72087caed587b873f48cf7bd76ee0689339e8e8f1169308d4e1",
+          "model_profile": "legacy-v1",
+          "spans": [
+            {
+              "frame_span": [
+                2,
+                8
+              ],
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "status": "complete",
+          "timebase": {
+            "frame_offset": 0,
+            "hop_length": 256,
+            "sample_rate": 22050,
+            "time_pooling": 3
+          }
+        }
+      }
+    },
+    "Baseline_BDR": {
+      "architecture_id": "legacy-v1-acoustic-baseline",
+      "boundary_checkpoint_sha256": "a3955b290311bec16f04253eac328147d444f275f263315490ec5faf1a668fc9",
+      "checkpoint_sha256": "b420ea97032691b3f51e271c0b688a85e168d7b7ee89baf6725f601ccd07bb45",
+      "installed_cli": {
+        "command": [
+          "ai-auto-lrc",
+          "<lyrics.txt>",
+          "<fixture.mp3>",
+          "--asset-root",
+          "<repository-root>",
+          "--device",
+          "cpu",
+          "--decoder",
+          "torchaudio",
+          "--acoustic-model",
+          "Baseline_BDR",
+          "--timestamps",
+          "line"
+        ],
+        "entry_point": "installed ai-auto-lrc console script",
+        "exit_code": 0,
+        "network_attempted": false,
+        "stderr": "",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout": "[00:00.069]a\n",
+        "stdout_sha256": "1e40af44995c359d42fb96244103f99f54d945aa7a34d73323a918ab21f5c9fe",
+        "t2l_import_origin": "/workspace/.venv/lib/python3.10/site-packages/t2l/__init__.py",
+        "t2l_imported_from_installed_site_packages": true,
+        "working_directory": "outside-repository"
+      },
+      "installed_cli_word": {
+        "command": [
+          "ai-auto-lrc",
+          "<lyrics.txt>",
+          "<fixture.mp3>",
+          "--asset-root",
+          "<repository-root>",
+          "--device",
+          "cpu",
+          "--decoder",
+          "torchaudio",
+          "--acoustic-model",
+          "Baseline_BDR",
+          "--timestamps",
+          "word"
+        ],
+        "entry_point": "installed ai-auto-lrc console script",
+        "exit_code": 0,
+        "network_attempted": false,
+        "stderr": "",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout": "[00:00.069]<00:00.069>a\n",
+        "stdout_sha256": "5329489dd0148f549dc2c9e66f6d134dec0dd00597629adb7fc27a7d0897ad32",
+        "t2l_import_origin": "/workspace/.venv/lib/python3.10/site-packages/t2l/__init__.py",
+        "t2l_imported_from_installed_site_packages": true,
+        "working_directory": "outside-repository"
+      },
+      "model_name": "Baseline",
+      "python_api": {
+        "boundary": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "24d58890c9d3710ad32d136e5a1077904246e1be9b72befa58e3f1ccff2334a0",
+          "shape": [
+            9
+          ]
+        },
+        "config": {
+          "asset_root": "/workspace",
+          "decoder": "torchaudio",
+          "device": "cpu",
+          "offline": true,
+          "seed": 0
+        },
+        "decoded_audio": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "metadata": {
+            "channel_policy": "preserve",
+            "decoder": "torchaudio",
+            "separated_vocals": false
+          },
+          "raw_little_endian_f32_sha256": "7fd29c3be04ae2bda8f86ad5eae90d46235b7e09e19d0d767aaf4f2772be0367",
+          "sample_rate": 22050,
+          "shape": [
+            1,
+            6912
+          ]
+        },
+        "entry_point": "t2l.process(request, runtime=t2l.create_runtime(config))",
+        "features": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "58e8aff4036d35ec2c1114a55bf8cacd216dfea566cb8df60dc5719871e35be5",
+          "shape": [
+            1,
+            1,
+            128,
+            28
+          ]
+        },
+        "lyrics_plan": {
+          "diagnostics": [],
+          "line_spans": [
+            [
+              0,
+              1
+            ]
+          ],
+          "lines": [
+            [
+              "a"
+            ]
+          ],
+          "phones": [
+            "AH"
+          ],
+          "phonetics": [
+            [
+              "a"
+            ]
+          ],
+          "pre_lines_unprocessed": "",
+          "tokens": [
+            {
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "word_spans": [
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "posterior": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "08ab8266cf0fada4c5ac8a64ff6daffbcd9d4072140657bb79d26ec146a85e8b",
+          "shape": [
+            9,
+            41
+          ]
+        },
+        "request": {
+          "acoustic_model": "Baseline_BDR",
+          "allow_partial": false,
+          "audio_path": "tests/fixtures/audio/sine-440hz-250ms-mono-22050.mp3",
+          "lyrics": [
+            "a"
+          ],
+          "timestamp_mode": "line",
+          "vocal_separation": null
+        },
+        "result": {
+          "aligned_token_count": 1,
+          "diagnostics": [],
+          "expected_token_count": 1,
+          "lrc": "[00:00.069]a",
+          "lrc_sha256": "bfa173cfd164a72087caed587b873f48cf7bd76ee0689339e8e8f1169308d4e1",
+          "model_profile": "legacy-v1",
+          "spans": [
+            {
+              "frame_span": [
+                2,
+                8
+              ],
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "status": "complete",
+          "timebase": {
+            "frame_offset": 0,
+            "hop_length": 256,
+            "sample_rate": 22050,
+            "time_pooling": 3
+          }
+        }
+      },
+      "python_api_word": {
+        "boundary": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "24d58890c9d3710ad32d136e5a1077904246e1be9b72befa58e3f1ccff2334a0",
+          "shape": [
+            9
+          ]
+        },
+        "config": {
+          "asset_root": "/workspace",
+          "decoder": "torchaudio",
+          "device": "cpu",
+          "offline": true,
+          "seed": 0
+        },
+        "decoded_audio": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "metadata": {
+            "channel_policy": "preserve",
+            "decoder": "torchaudio",
+            "separated_vocals": false
+          },
+          "raw_little_endian_f32_sha256": "7fd29c3be04ae2bda8f86ad5eae90d46235b7e09e19d0d767aaf4f2772be0367",
+          "sample_rate": 22050,
+          "shape": [
+            1,
+            6912
+          ]
+        },
+        "entry_point": "t2l.process(request, runtime=t2l.create_runtime(config))",
+        "features": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "58e8aff4036d35ec2c1114a55bf8cacd216dfea566cb8df60dc5719871e35be5",
+          "shape": [
+            1,
+            1,
+            128,
+            28
+          ]
+        },
+        "lyrics_plan": {
+          "diagnostics": [],
+          "line_spans": [
+            [
+              0,
+              1
+            ]
+          ],
+          "lines": [
+            [
+              "a"
+            ]
+          ],
+          "phones": [
+            "AH"
+          ],
+          "phonetics": [
+            [
+              "a"
+            ]
+          ],
+          "pre_lines_unprocessed": "",
+          "tokens": [
+            {
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "word_spans": [
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "posterior": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "08ab8266cf0fada4c5ac8a64ff6daffbcd9d4072140657bb79d26ec146a85e8b",
+          "shape": [
+            9,
+            41
+          ]
+        },
+        "request": {
+          "acoustic_model": "Baseline_BDR",
+          "allow_partial": false,
+          "audio_path": "tests/fixtures/audio/sine-440hz-250ms-mono-22050.mp3",
+          "lyrics": [
+            "a"
+          ],
+          "timestamp_mode": "word",
+          "vocal_separation": null
+        },
+        "result": {
+          "aligned_token_count": 1,
+          "diagnostics": [],
+          "expected_token_count": 1,
+          "lrc": "[00:00.069]<00:00.069>a",
+          "lrc_sha256": "0f395fd405b42e16058f863927f79d8b55b6f2c8e52738b11784c9595603e1cd",
+          "model_profile": "legacy-v1",
+          "spans": [
+            {
+              "frame_span": [
+                2,
+                8
+              ],
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "status": "complete",
+          "timebase": {
+            "frame_offset": 0,
+            "hop_length": 256,
+            "sample_rate": 22050,
+            "time_pooling": 3
+          }
+        }
+      }
+    },
+    "MTL": {
+      "architecture_id": "legacy-v1-acoustic-mtl",
+      "boundary_checkpoint_sha256": null,
+      "checkpoint_sha256": "826559e7e810bf8f90223d8fd5c66525c01ad4dd9cdc19d019f39f784e7ed3c1",
+      "installed_cli": {
+        "command": [
+          "ai-auto-lrc",
+          "<lyrics.txt>",
+          "<fixture.mp3>",
+          "--asset-root",
+          "<repository-root>",
+          "--device",
+          "cpu",
+          "--decoder",
+          "torchaudio",
+          "--acoustic-model",
+          "MTL",
+          "--timestamps",
+          "line"
+        ],
+        "entry_point": "installed ai-auto-lrc console script",
+        "exit_code": 0,
+        "network_attempted": false,
+        "stderr": "",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout": "[00:00.069]a\n",
+        "stdout_sha256": "1e40af44995c359d42fb96244103f99f54d945aa7a34d73323a918ab21f5c9fe",
+        "t2l_import_origin": "/workspace/.venv/lib/python3.10/site-packages/t2l/__init__.py",
+        "t2l_imported_from_installed_site_packages": true,
+        "working_directory": "outside-repository"
+      },
+      "model_name": "MTL",
+      "python_api": {
+        "boundary": null,
+        "config": {
+          "asset_root": "/workspace",
+          "decoder": "torchaudio",
+          "device": "cpu",
+          "offline": true,
+          "seed": 0
+        },
+        "decoded_audio": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "metadata": {
+            "channel_policy": "preserve",
+            "decoder": "torchaudio",
+            "separated_vocals": false
+          },
+          "raw_little_endian_f32_sha256": "7fd29c3be04ae2bda8f86ad5eae90d46235b7e09e19d0d767aaf4f2772be0367",
+          "sample_rate": 22050,
+          "shape": [
+            1,
+            6912
+          ]
+        },
+        "entry_point": "t2l.process(request, runtime=t2l.create_runtime(config))",
+        "features": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "58e8aff4036d35ec2c1114a55bf8cacd216dfea566cb8df60dc5719871e35be5",
+          "shape": [
+            1,
+            1,
+            128,
+            28
+          ]
+        },
+        "lyrics_plan": {
+          "diagnostics": [],
+          "line_spans": [
+            [
+              0,
+              1
+            ]
+          ],
+          "lines": [
+            [
+              "a"
+            ]
+          ],
+          "phones": [
+            "AH"
+          ],
+          "phonetics": [
+            [
+              "a"
+            ]
+          ],
+          "pre_lines_unprocessed": "",
+          "tokens": [
+            {
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "word_spans": [
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "posterior": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "3348ea1ebb979db66ced482f455bb99efc57175717e085ab72cb017ad4b7a99c",
+          "shape": [
+            9,
+            41
+          ]
+        },
+        "request": {
+          "acoustic_model": "MTL",
+          "allow_partial": false,
+          "audio_path": "tests/fixtures/audio/sine-440hz-250ms-mono-22050.mp3",
+          "lyrics": [
+            "a"
+          ],
+          "timestamp_mode": "line",
+          "vocal_separation": null
+        },
+        "result": {
+          "aligned_token_count": 1,
+          "diagnostics": [],
+          "expected_token_count": 1,
+          "lrc": "[00:00.069]a",
+          "lrc_sha256": "bfa173cfd164a72087caed587b873f48cf7bd76ee0689339e8e8f1169308d4e1",
+          "model_profile": "legacy-v1",
+          "spans": [
+            {
+              "frame_span": [
+                2,
+                8
+              ],
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "status": "complete",
+          "timebase": {
+            "frame_offset": 0,
+            "hop_length": 256,
+            "sample_rate": 22050,
+            "time_pooling": 3
+          }
+        }
+      }
+    },
+    "MTL_BDR": {
+      "architecture_id": "legacy-v1-acoustic-mtl",
+      "boundary_checkpoint_sha256": "a3955b290311bec16f04253eac328147d444f275f263315490ec5faf1a668fc9",
+      "checkpoint_sha256": "826559e7e810bf8f90223d8fd5c66525c01ad4dd9cdc19d019f39f784e7ed3c1",
+      "installed_cli": {
+        "command": [
+          "ai-auto-lrc",
+          "<lyrics.txt>",
+          "<fixture.mp3>",
+          "--asset-root",
+          "<repository-root>",
+          "--device",
+          "cpu",
+          "--decoder",
+          "torchaudio",
+          "--acoustic-model",
+          "MTL_BDR",
+          "--timestamps",
+          "line"
+        ],
+        "entry_point": "installed ai-auto-lrc console script",
+        "exit_code": 0,
+        "network_attempted": false,
+        "stderr": "",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout": "[00:00.069]a\n",
+        "stdout_sha256": "1e40af44995c359d42fb96244103f99f54d945aa7a34d73323a918ab21f5c9fe",
+        "t2l_import_origin": "/workspace/.venv/lib/python3.10/site-packages/t2l/__init__.py",
+        "t2l_imported_from_installed_site_packages": true,
+        "working_directory": "outside-repository"
+      },
+      "model_name": "MTL",
+      "python_api": {
+        "boundary": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "24d58890c9d3710ad32d136e5a1077904246e1be9b72befa58e3f1ccff2334a0",
+          "shape": [
+            9
+          ]
+        },
+        "config": {
+          "asset_root": "/workspace",
+          "decoder": "torchaudio",
+          "device": "cpu",
+          "offline": true,
+          "seed": 0
+        },
+        "decoded_audio": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "metadata": {
+            "channel_policy": "preserve",
+            "decoder": "torchaudio",
+            "separated_vocals": false
+          },
+          "raw_little_endian_f32_sha256": "7fd29c3be04ae2bda8f86ad5eae90d46235b7e09e19d0d767aaf4f2772be0367",
+          "sample_rate": 22050,
+          "shape": [
+            1,
+            6912
+          ]
+        },
+        "entry_point": "t2l.process(request, runtime=t2l.create_runtime(config))",
+        "features": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "58e8aff4036d35ec2c1114a55bf8cacd216dfea566cb8df60dc5719871e35be5",
+          "shape": [
+            1,
+            1,
+            128,
+            28
+          ]
+        },
+        "lyrics_plan": {
+          "diagnostics": [],
+          "line_spans": [
+            [
+              0,
+              1
+            ]
+          ],
+          "lines": [
+            [
+              "a"
+            ]
+          ],
+          "phones": [
+            "AH"
+          ],
+          "phonetics": [
+            [
+              "a"
+            ]
+          ],
+          "pre_lines_unprocessed": "",
+          "tokens": [
+            {
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "word_spans": [
+            [
+              0,
+              1
+            ]
+          ]
+        },
+        "posterior": {
+          "dtype": "float32",
+          "finite": true,
+          "layout": "C-contiguous little-endian float32 raw bytes",
+          "raw_little_endian_f32_sha256": "3348ea1ebb979db66ced482f455bb99efc57175717e085ab72cb017ad4b7a99c",
+          "shape": [
+            9,
+            41
+          ]
+        },
+        "request": {
+          "acoustic_model": "MTL_BDR",
+          "allow_partial": false,
+          "audio_path": "tests/fixtures/audio/sine-440hz-250ms-mono-22050.mp3",
+          "lyrics": [
+            "a"
+          ],
+          "timestamp_mode": "line",
+          "vocal_separation": null
+        },
+        "result": {
+          "aligned_token_count": 1,
+          "diagnostics": [],
+          "expected_token_count": 1,
+          "lrc": "[00:00.069]a",
+          "lrc_sha256": "bfa173cfd164a72087caed587b873f48cf7bd76ee0689339e8e8f1169308d4e1",
+          "model_profile": "legacy-v1",
+          "spans": [
+            {
+              "frame_span": [
+                2,
+                8
+              ],
+              "line_index": 0,
+              "text": "a",
+              "token_index": 0
+            }
+          ],
+          "status": "complete",
+          "timebase": {
+            "frame_offset": 0,
+            "hop_length": 256,
+            "sample_rate": 22050,
+            "time_pooling": 3
+          }
+        }
+      }
+    }
+  },
+  "schema_version": 1,
+  "scope": "real-decoder-public-api-installed-cli",
+  "status": "canonical"
+}
