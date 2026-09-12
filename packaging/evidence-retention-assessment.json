@@ -1,0 +1,113 @@
+{
+  "assessment_id": "w1b5-local-assessment-v1",
+  "capabilities": {
+    "archive": false,
+    "destroy": false,
+    "expire": false,
+    "inspect": true,
+    "prepare_export": false,
+    "scan": true
+  },
+  "classifications": [
+    "captured-input",
+    "checkpoint",
+    "log-raw",
+    "metadata",
+    "source-raw",
+    "test-evidence",
+    "unknown"
+  ],
+  "created_at_utc": "2026-09-06T00:00:00Z",
+  "decision_state": "pending-human-approval",
+  "decisions": {
+    "approval_count": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "approval_ttl_seconds": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "archive_provider": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "checkpoint_strategy": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "destruction": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "evidence_owner": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "export_classes": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "export_purposes": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "key_custody": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "key_rotation": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "release_owner": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "retention_by_class": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "rpo_hours": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "rto_hours": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "security_owner": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    },
+    "tombstone_days": {
+      "decision_id": null,
+      "status": "unresolved",
+      "value": null
+    }
+  },
+  "mode": "assessment-only",
+  "scanner": {
+    "max_file_bytes": 67108864,
+    "on_error": "block",
+    "rule_set_id": "w1b5-assessment-v1",
+    "rule_set_sha256": "ab396187f0e53e26d9eb63cd3d4051a3103233b0cc4154d1199248247398df3c"
+  },
+  "schema": "ai-auto-lrc/retention-assessment",
+  "schema_version": 1
+}

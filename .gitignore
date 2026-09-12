@@ -9,3 +9,12 @@ generate
 .vscode
 demofile/mdx_q
 demofile/mdx_extra
+
+# Local environments and generated build/test/output artifacts
+.venv/
+*.egg-info/
+build/
+dist/
+.ruff_cache/
+.coverage.*
+/output/

@@ -1,0 +1,724 @@
+{
+  "capabilities": [
+    {
+      "category": "anchored-sealed-read",
+      "description": "Read sealed receipt closure through a pinned run directory descriptor.",
+      "id": "S18-CAP-01",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["verified run remains bound to the opened directory"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_verify_receipt_at_stays_on_open_run_after_parent_swap",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["non-regular sealed node is rejected without blocking"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_verify_receipt_at_rejects_nonregular_sealed_file_without_blocking[symlink]",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux verified run remains bound to the opened directory"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_verify_receipt_at_stays_on_open_run_after_parent_swap",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux non-regular sealed node is rejected without blocking"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_verify_receipt_at_rejects_nonregular_sealed_file_without_blocking[symlink]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["root descriptor failure keeps the caller-owned descriptor open"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s18_walk_receipt_closure_maps_root_fstat_error_without_closing_owner_fd",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": true, "critical_line": true, "name": "_DirFdReceiptIO._open_parent"},
+            {"critical_branch": true, "critical_line": true, "name": "_DirFdReceiptIO.read"},
+            {"critical_branch": true, "critical_line": true, "name": "_DirFdReceiptIO.file_closure"},
+            {"critical_branch": true, "critical_line": true, "name": "_walk_receipt_closure"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "stable-external-read",
+      "description": "Bind an external regular file to stable identity, size, and digest.",
+      "id": "S18-CAP-02",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["archived receipt closure is independently rehashed"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_verify_requires_valid_sealed_completion_marker",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["tampered untracked snapshot is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_archived_integrity_rejects_tampered_untracked_snapshot",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": true, "critical_line": true, "name": "_read_stable_regular"},
+            {"critical_branch": true, "critical_line": true, "name": "_verify_record"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "source-observation",
+      "description": "Keep current-source verification sequential, bounded, and diagnostic only.",
+      "id": "S18-CAP-03",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["equal bounded observations are accepted"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s15_current_source_accepts_equal_sequential_observations",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["checkout drift between observations is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s15_current_source_rejects_different_sequential_observations",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["open repository descriptor anchors procfs observation"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_current_source_verification_uses_open_repository_anchor",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["later checkout drift is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_current_source_verification_rejects_later_checkout_drift",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["unknown source claim is rejected by exact schema"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s17_verify_receipt_at_rejects_unknown_source_claims[transactional-True]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["missing observation-limit claim is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s15_verify_receipt_at_rejects_invalid_source_observation_limit[missing]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["tampered observation-limit claim is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s15_verify_receipt_at_rejects_invalid_source_observation_limit[tampered]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": false, "critical_line": false, "name": "_source_material"},
+            {"critical_branch": true, "critical_line": true, "name": "_source_material_at"},
+            {"critical_branch": false, "critical_line": false, "name": "_verify_source_summary"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "capture-isolation",
+      "description": "Preflight an external retention root and publish a sealed run exclusively.",
+      "id": "S18-CAP-04",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["concurrent captures use disjoint sealed directories"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_concurrent_captures_use_disjoint_sealed_directories",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["retention root inside repository is rejected before launch"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_retention_root_inside_repo_is_rejected_before_gate_starts",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": false, "critical_line": false, "name": "_preflight"},
+            {"critical_branch": true, "critical_line": true, "name": "_seal_run"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "subprocess-signal",
+      "description": "Preserve gate return codes and forward termination signals.",
+      "id": "S18-CAP-05",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["nonzero gate return code is retained in sealed evidence"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_gate_failure_is_sealed_diagnostic_and_preserves_gate_exit_code[5]",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["SIGTERM is forwarded and produces diagnostic evidence"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_sigterm_is_forwarded_and_sealed_as_diagnostic",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": false, "critical_line": false, "name": "_run_gate_process"},
+            {"critical_branch": true, "critical_line": true, "name": "_normalize_returncode"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "portable-binding",
+      "description": "Bind portable coverage, JUnit, policy, source, and run identity.",
+      "id": "S18-CAP-06",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["portable gate launches in an exclusive run directory"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_capture_launches_gate_in_an_exclusive_run_directory[portable]",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["extra layer artifact prevents qualification"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_extra_layer_artifact_prevents_qualification",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": false, "critical_line": false, "name": "_portable_binding_reasons"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "package-closure",
+      "description": "Validate the package runner sidecar and its immutable artifact closure.",
+      "id": "S18-CAP-07",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["complete package sidecar closes the declared layer"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_complete_package_sidecar_closes_linux_package_layer",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["cross-run package sidecar is diagnostic"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_package_sidecar_semantic_mutations_are_diagnostic[cross-run]",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": false, "critical_line": false, "name": "_validate_package_sidecar"},
+            {"critical_branch": false, "critical_line": false, "name": "_package_binding_reasons"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "canonical-closure",
+      "description": "Validate canonical container, oracle, source, and JUnit bindings.",
+      "id": "S18-CAP-08",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["complete canonical closure remains implemented-unqualified"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_complete_canonical_closure_is_implemented_unqualified",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["self-qualified canonical claim is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_canonical_sidecar_semantic_mutations_are_diagnostic[self-qualified]",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": false, "critical_line": false, "name": "_validate_canonical_sidecar"},
+            {"critical_branch": false, "critical_line": false, "name": "_canonical_binding_reasons"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "receipt-finalize-verify",
+      "description": "Finalize a sealed receipt and independently recompute its closure and reasons.",
+      "id": "S18-CAP-09",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["archived-integrity mode reports frozen observation semantics"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s15_verify_cli_reports_effective_observation_semantics[archived-integrity]",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["forged qualification reason is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_verify_rejects_self_asserted_high_qualification",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux archived-integrity mode reports frozen observation semantics"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s15_verify_cli_reports_effective_observation_semantics[archived-integrity]",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux archived receipt tampering is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_archived_integrity_rejects_tampered_untracked_snapshot",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": false, "critical_line": false, "name": "_finalize_run"},
+            {"critical_branch": false, "critical_line": false, "name": "_verify_receipt_from_io"},
+            {"critical_branch": true, "critical_line": true, "name": "verify_receipt_at"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "config-trust-anchor",
+      "description": "Bind strict configuration bytes to independent expected digests.",
+      "id": "S18-CAP-10",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["checked-in assessment binds exact checked-in rules bytes"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_t03_checked_in_assessment_binds_exact_checked_in_rules_bytes",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["whole-package rebind cannot replace external trust anchor"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_t03_whole_package_rebind_cannot_replace_external_config_anchor",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux block and char configuration nodes fail before control write"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s17_linux_block_and_char_devices_fail_before_control_write",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux checked-in assessment binds exact checked-in rules bytes"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_t03_checked_in_assessment_binds_exact_checked_in_rules_bytes",
+              "runner": "linux",
+              "semantic": "success"
+            }
+          ],
+          "script": "retention",
+          "symbols": [
+            {"critical_branch": true, "critical_line": true, "name": "_stable_bytes"},
+            {"critical_branch": true, "critical_line": true, "name": "load_secret_rules"},
+            {"critical_branch": true, "critical_line": true, "name": "load_retention_assessment"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "bounded-scan",
+      "description": "Bound tree metadata, file bytes, findings, and cross-chunk matching.",
+      "id": "S18-CAP-11",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["exact entry file byte and metadata caps are accepted"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s14_exact_entry_file_byte_and_metadata_caps_are_accepted",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["scan stops at cap plus one without exhausting iterator"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s14_scandir_stops_at_cap_plus_one_without_exhausting_iterator",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "retention",
+          "symbols": [
+            {"critical_branch": true, "critical_line": true, "name": "_tree_snapshot"},
+            {"critical_branch": true, "critical_line": true, "name": "_walk_retention_tree"},
+            {"critical_branch": true, "critical_line": true, "name": "_scan_file"},
+            {"critical_branch": true, "critical_line": true, "name": "_scan_tree"},
+            {"critical_branch": true, "critical_line": true, "name": "_window_hits"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "no-replace-publication",
+      "description": "Publish exactly one inspection and ledger event with no-replace semantics.",
+      "id": "S18-CAP-12",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["second inspection never overwrites committed state"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_t14_second_inspection_never_overwrites_committed_state",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["macOS renameatx_np commits once and preserves both collision operands"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s18_native_rename_noreplace_commits_once_and_preserves_existing_target",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["unsupported no-replace operation leaves no event"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s10_unsupported_no_replace_fails_closed_without_event",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux renameat2 no-replace preserves an existing target"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s18_rename_noreplace_rejects_unsafe_source_and_existing_target",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux renameat2 commits once and preserves both collision operands"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s18_native_rename_noreplace_commits_once_and_preserves_existing_target",
+              "runner": "linux",
+              "semantic": "success"
+            }
+          ],
+          "script": "retention",
+          "symbols": [
+            {"critical_branch": true, "critical_line": true, "name": "_rename_noreplace"},
+            {"critical_branch": true, "critical_line": true, "name": "_publish_event"},
+            {"critical_branch": true, "critical_line": true, "name": "_post_rename_identity"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "locking-concurrency",
+      "description": "Serialize publishers with pinned namespace and real process flock contention.",
+      "id": "S18-CAP-13",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["one of two independent publishers commits"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_two_subprocess_publishers_never_double_commit",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["flock contention is fail-fast and write-free"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_subprocess_lock_contention_is_fail_fast_and_write_free",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux two-publisher no-double-commit path succeeds"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s11_two_concurrent_publishers_have_one_committer",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux namespace swap fails without replacement writes"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s12_control_tree_swap_after_flock_fails_closed_without_replacement_writes[run-control]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["two independent Linux subprocess publishers never double commit"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_two_subprocess_publishers_never_double_commit",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux subprocess flock contention is fail-fast and write-free"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_subprocess_lock_contention_is_fail_fast_and_write_free",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "retention",
+          "symbols": [
+            {"critical_branch": true, "critical_line": true, "name": "_open_lock"},
+            {"critical_branch": false, "critical_line": false, "name": "inspect_run"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "crash-ledger-recovery",
+      "description": "Classify crash states and validate ledger transitions without recovery writes.",
+      "id": "S18-CAP-14",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["committed crash checkpoint is stable across fresh verification"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_sigkill_checkpoint_has_stable_restart_classification[event-renamed-COMMITTED_VALID-INSPECTION_ALREADY_COMMITTED]",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["rehashed semantically invalid ledger gap is rejected"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s10_rehashed_semantically_invalid_ledger_event_is_rejected[gap]",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux post-fsync crash classification remains committed"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_sigkill_checkpoint_has_stable_restart_classification[run-fsynced-COMMITTED_VALID-INSPECTION_ALREADY_COMMITTED]",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux staging crash requires explicit recovery"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_sigkill_checkpoint_has_stable_restart_classification[staging-fsynced-STAGING_PRESENT-CONTROL_RECOVERY_REQUIRED]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux inspection-fsynced crash remains an orphan requiring recovery"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_sigkill_checkpoint_has_stable_restart_classification[inspection-fsynced-ORPHAN_INSPECTION-CONTROL_RECOVERY_REQUIRED]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux event-renamed crash remains committed"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_sigkill_checkpoint_has_stable_restart_classification[event-renamed-COMMITTED_VALID-INSPECTION_ALREADY_COMMITTED]",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux events-fsynced crash remains committed"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_sigkill_checkpoint_has_stable_restart_classification[events-fsynced-COMMITTED_VALID-INSPECTION_ALREADY_COMMITTED]",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux teardown-entered crash remains committed"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s16_sigkill_checkpoint_has_stable_restart_classification[teardown-entered-COMMITTED_VALID-INSPECTION_ALREADY_COMMITTED]",
+              "runner": "linux",
+              "semantic": "success"
+            }
+          ],
+          "script": "retention",
+          "symbols": [
+            {"critical_branch": true, "critical_line": true, "name": "_ledger_state"},
+            {"critical_branch": false, "critical_line": false, "name": "verify_inspection"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "cli-redaction",
+      "description": "Emit canonical success JSON and one-line sanitized failures.",
+      "id": "S18-CAP-15",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["current-source CLI reports effective observation semantics"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s15_verify_cli_reports_effective_observation_semantics[current-source]",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["unknown source qualification claim is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s17_verify_receipt_at_rejects_unknown_source_claims[qualification-release]",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": false, "critical_line": false, "name": "main"}
+          ]
+        },
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["pass CLI emits sanitized canonical JSON"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_cli_pass_uses_checked_in_defaults_and_emits_sanitized_json",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["known CLI failure is one sanitized line"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_cli_known_failure_is_one_sanitized_stderr_line_without_paths",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "retention",
+          "symbols": [
+            {"critical_branch": false, "critical_line": false, "name": "main"},
+            {"critical_branch": false, "critical_line": false, "name": "_output"}
+          ]
+        }
+      ]
+    },
+    {
+      "category": "qualification-provenance",
+      "description": "Recompute qualification from raw artifacts and reject incomplete provenance.",
+      "id": "S18-CAP-16",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["package gate binds same run JUnit and policy"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_package_gate_must_bind_same_run_junit_and_policy[gate-run]",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["forged package JUnit binding is rejected"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_package_gate_must_bind_same_run_junit_and_policy[gate-junit]",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": []
+        },
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["inspection layout is stable at the public boundary"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s13a_public_api_cli_and_inspection_layout_golden",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["post-event teardown failure is commit uncertain"],
+              "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s13b_post_event_teardown_failure_is_uncertain_and_context_is_released[lock-fd-close]",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "retention",
+          "symbols": []
+        }
+      ]
+    },
+    {
+      "category": "capture-closure-budget",
+      "description": "Bound receipt closure materialization and fail before cap-plus-one expansion.",
+      "id": "S18-CAP-17",
+      "targets": [
+        {
+          "requirements": [
+            {
+              "expected_outcomes": ["binary logs remain outside receipt text while closure is retained"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_binary_logs_are_retained_without_entering_receipt_text",
+              "runner": "macos",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["special untracked node forces diagnostic qualification"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_special_untracked_file_is_nonblocking_and_forces_diagnostic",
+              "runner": "macos",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux exact cumulative receipt byte budget is accepted"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s18_receipt_reader_enforces_cumulative_byte_limit_before_extra_read[exact-byte-limit]",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux receipt byte budget rejects cap plus one before an extra read"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s18_receipt_reader_enforces_cumulative_byte_limit_before_extra_read[byte-limit-plus-one]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux exact receipt entry budget is accepted"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s18_file_closure_enforces_entry_limit_incrementally[exact-entry-limit]",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux receipt entry budget rejects cap plus one"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s18_file_closure_enforces_entry_limit_incrementally[entry-limit-plus-one]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            },
+            {
+              "expected_outcomes": ["Linux exact receipt metadata budget is accepted"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s18_file_closure_enforces_metadata_limit_incrementally[exact-metadata-limit]",
+              "runner": "linux",
+              "semantic": "success"
+            },
+            {
+              "expected_outcomes": ["Linux receipt metadata budget rejects cap plus one"],
+              "nodeid": "tests/contract/test_evidence_capture.py::test_s18_file_closure_enforces_metadata_limit_incrementally[cap-plus-one]",
+              "runner": "linux",
+              "semantic": "fail_closed"
+            }
+          ],
+          "script": "capture",
+          "symbols": [
+            {"critical_branch": true, "critical_line": true, "name": "_DirFdReceiptIO.file_closure"},
+            {"critical_branch": true, "critical_line": true, "name": "_walk_receipt_closure"},
+            {"critical_branch": false, "critical_line": false, "name": "_verify_receipt_from_io"}
+          ]
+        }
+      ]
+    }
+  ],
+  "platform_exclusions": [
+    {
+      "nodeid": "tests/contract/test_evidence_retention.py::test_ret_s17_linux_block_and_char_devices_fail_before_control_write",
+      "reason": "requires Linux mknod device semantics",
+      "runner": "macos",
+      "script": "retention"
+    }
+  ],
+  "criticality_policy": {
+    "critical": "atomic_fail_closed_enforcement_seams_require_100_percent_line_and_branch",
+    "noncritical": "orchestration_and_diagnostic_aggregators_use_global_80_percent_and_required_success_fail_nodeids",
+    "thresholds_unchanged": true
+  },
+  "schema_version": 1
+}

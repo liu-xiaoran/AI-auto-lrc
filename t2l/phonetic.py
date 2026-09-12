@@ -1,19 +1,61 @@
-from pypinyin import lazy_pinyin
 # https://modelpredict.com/language-identification-survey#benchmarked-libraries
 # import pycld2 as cld2  # great speed, but inaccurate
-import fasttext
 import logging
-import pykakasi  # ATTENTION: GPL licensed
-import kroman
 import re
-import cyrtranslit
+import threading
+from pathlib import Path
 
 logger = logging.getLogger("phonetize")
-kks = pykakasi.kakasi()
-fasttext_model = fasttext.load_model('lid.176.ftz')
+_resource_lock = threading.RLock()
+_kks = None
+_fasttext_model = None
+_lid_model_path = Path(__file__).resolve().parents[1] / "lid.176.ftz"
 
 
-def phonetize(ch):
+def _script_language(txt):
+    if re.search('[\u30a0-\u30ff\u3040-\u309f]+', txt):
+        return '__label__ja'
+    if re.search('[\u4e00-\u9fa5]+', txt):
+        return '__label__zh'
+    if re.search('[\uac00-\ud7ff]+', txt):
+        return '__label__ko'
+    if re.search('[\u0400-\u04FF]+', txt):
+        return '__label__ru'
+    return None
+
+
+def _get_kakasi():
+    global _kks
+    with _resource_lock:
+        if _kks is None:
+            import pykakasi  # ATTENTION: GPL licensed
+
+            _kks = pykakasi.kakasi()
+        return _kks
+
+
+def _get_fasttext_model():
+    global _fasttext_model
+    with _resource_lock:
+        if _fasttext_model is None:
+            import fasttext
+
+            _fasttext_model = fasttext.load_model(str(_lid_model_path))
+        return _fasttext_model
+
+
+def configure_lid_model(path):
+    """Configure the local LID asset before the first non-script detection."""
+
+    global _fasttext_model, _lid_model_path
+    resolved = Path(path).expanduser().resolve()
+    with _resource_lock:
+        if _fasttext_model is not None and resolved != _lid_model_path:
+            raise RuntimeError("The fastText LID model is already initialized.")
+        _lid_model_path = resolved
+
+
+def phonetize(ch, *, language_detector=None, kakasi_provider=None):
     """
     暂时只识别：zh,ja,ko,en
     :return: 返回数组[(word, phone), ...], 且转换后的phone只包含a-z'~字串
@@ -30,11 +72,13 @@ def phonetize(ch):
     # help(cld2.detect)
     # reliable, _, details = cld2.detect(ch, isPlainText=True, returnVectors=False,
     #                                    hintLanguageHTTPHeaders='zh,ja,ko,en,ru')
-    lang_result = detect_language(ch)
+    lang_result = (language_detector or detect_language)(ch)
 
     # 暂时只取1种语言
     ret = []
     if lang_result == '__label__zh':
+        from pypinyin import lazy_pinyin
+
         # 对hhh h234 对冯绍峰撒发!fds dui地方
         ret = lazy_pinyin(ch)
         ret = convertPairsPinyin(ch, ret)
@@ -46,13 +90,17 @@ def phonetize(ch):
             idx = idx1
     elif lang_result == '__label__ja':
         # おはようごぎ.い!ます. thank you 123! ohayougogi. かな漢字交じり文.: 'ohayougogi.', 'i!', 'masu.', ' thank you 123!', 'kana', 'kanji', 'majiri', 'bun.'
-        ret = kks.convert(ch)
+        ret = (kakasi_provider or _get_kakasi)().convert(ch)
         ret = convertPairsJp(ret)
     elif lang_result == '__label__ko':
+        import kroman
+
         # 이것은 제 것이 아니에요.이명씨의 것이에요. thank-you 123: i-geos-eun je geos-i a-ni-e-yo.i-myeong-ssi-eui geos-i-e-yo. thank-you 123 geos je
         ret = kroman.parse(ch)
         ret = convertPairsKorean(ch, ret)
     elif lang_result == '__label__ru':
+        import cyrtranslit
+
         # Моё судно на воздушной подушке полно угрей
         ret = cyrtranslit.to_latin(ch)
         ret = convertPairsRussian(ch, ret)
@@ -61,23 +109,97 @@ def phonetize(ch):
     return ret
 
 
-def detect_language(txt):
+def detect_language(txt, *, model_provider=None):
     # 先正则匹配cjk
-    if re.search('[\u30a0-\u30ff\u3040-\u309f]+', txt):
-        return '__label__ja'
-    if re.search('[\u4e00-\u9fa5]+', txt):
-        return '__label__zh'
-    if re.search('[\uac00-\ud7ff]+', txt):
-        return '__label__ko'
-    if re.search('[\u0400-\u04FF]+', txt):
-        return '__label__ru'
+    script_result = _script_language(txt)
+    if script_result is not None:
+        return script_result
 
-    lang_result = fasttext_model.predict(
+    lang_result = (model_provider or _get_fasttext_model)().predict(
         txt, k=1)  # (('__label__en',), (0.95,))
     if len(lang_result[-1]) == 0 or lang_result[-1][0] < 0.5:
         logger.warning('unreliable language detect: %s, details=%s',
                     lang_result, txt)
     return lang_result[0][0] if len(lang_result[0]) > 0 else 'un'
+
+
+class PhoneticConverter:
+    """Runtime-scoped, lazy language resources for isolated v2 runtimes."""
+
+    def __init__(
+        self,
+        lid_model_path,
+        *,
+        fasttext_loader=None,
+        kakasi_factory=None,
+        asset_owner=None,
+    ):
+        self._lid_model_path = Path(lid_model_path).expanduser().resolve()
+        self._asset_owner = asset_owner
+        self._fasttext_loader = fasttext_loader or self._load_fasttext
+        self._kakasi_factory = kakasi_factory or self._load_kakasi
+        self._fasttext_model = None
+        self._kakasi = None
+        self._fasttext_failure = None
+        self._kakasi_failure = None
+        self._lock = threading.RLock()
+
+    @staticmethod
+    def _load_fasttext(path):
+        import fasttext
+
+        return fasttext.load_model(str(path))
+
+    @staticmethod
+    def _load_kakasi():
+        import pykakasi  # ATTENTION: GPL licensed
+
+        return pykakasi.kakasi()
+
+    def _model(self):
+        with self._lock:
+            if self._fasttext_model is None:
+                if self._fasttext_failure is not None:
+                    raise self._fasttext_failure
+                try:
+                    self._fasttext_model = self._fasttext_loader(self._lid_model_path)
+                except Exception as exc:
+                    self._fasttext_failure = exc
+                    raise
+            return self._fasttext_model
+
+    def _kakasi_provider(self):
+        with self._lock:
+            if self._kakasi is None:
+                if self._kakasi_failure is not None:
+                    raise self._kakasi_failure
+                try:
+                    self._kakasi = self._kakasi_factory()
+                except Exception as exc:
+                    self._kakasi_failure = exc
+                    raise
+            return self._kakasi
+
+    def detect_language(self, txt):
+        # fastText's Python binding does not publish a per-instance concurrent
+        # call contract.  Keep both initialization and prediction inside the
+        # runtime-local lock so one runtime cannot expose a half-initialized or
+        # concurrently-mutated provider.  Distinct runtimes intentionally keep
+        # distinct locks and may still make progress in parallel.
+        with self._lock:
+            return detect_language(txt, model_provider=self._model)
+
+    def phonetize(self, text):
+        # pykakasi converters are likewise runtime-owned and conservatively
+        # serialized until their upstream call-time thread-safety is qualified.
+        # RLock is required because phonetize() re-enters detect_language() and
+        # the lazy provider accessors.
+        with self._lock:
+            return phonetize(
+                text,
+                language_detector=self.detect_language,
+                kakasi_provider=self._kakasi_provider,
+            )
 
 
 def convertPairsJp(phones):
@@ -156,33 +278,33 @@ def q2bs(unicode_str):
     """ 全角转半角
     q2bs("电影《2012》讲述了2012年12月21日的世界末日,主人公Jack以及世界各国人民挣扎求生的经历!。“f”·1‘’－【（）")
     """
-    return u"".join(map(q2b, unicode_str))
+    return "".join(map(q2b, unicode_str))
 
 
 def q2b(ch):
     """ 全角转半角"""
     od = ord(ch)
-    if 12288 == od:
+    if od == 12288:
         return ' '
-    elif 12289 == od:  # 、
+    elif od == 12289:  # 、
         return ','
-    elif 12290 == od:
+    elif od == 12290:
         return '.'
-    elif 12298 == od:
+    elif od == 12298:
         return '<'
-    elif 12299 == od:
+    elif od == 12299:
         return '>'
-    elif 12304 == od:
+    elif od == 12304:
         return '['
-    elif 12305 == od:
+    elif od == 12305:
         return ']'
-    elif 8212 == od:
+    elif od == 8212:
         return '-'
-    elif 183 == od:
+    elif od == 183:
         return '`'
-    elif 8221 == od or 8220 == od:
+    elif od == 8221 or od == 8220:
         return '"'
-    elif 8216 == od or 8217 == od:
+    elif od == 8216 or od == 8217:
         return "'"
     elif 65281 <= od <= 65374:
         return chr(od - 65248)
@@ -190,6 +312,10 @@ def q2b(ch):
 
 
 if __name__ == '__main__':
+    import cyrtranslit
+    import kroman
+    from pypinyin import lazy_pinyin
+
     ch = '对hhh h234 对冯绍峰撒发!fds dui地方'
     ret = lazy_pinyin(ch)
     ret = convertPairsPinyin(ch, ret)
@@ -199,7 +325,7 @@ if __name__ == '__main__':
     ret = convertPairsKorean(ch, ret)
     print(ret)
     ch = 'おはようごぎ.い!ます. thank you 123! ohayougogi. かな漢字交じり文.'
-    ret = kks.convert(ch)
+    ret = _get_kakasi().convert(ch)
     ret = convertPairsJp(ret)
     print(ret)
     ch = 'Моё'

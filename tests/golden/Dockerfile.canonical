@@ -1,0 +1,28 @@
+FROM python@sha256:8c97ebedc32fd60935cdf5992e935753e2a0f98231830028050e1e04bd3c13c2
+
+ENV AI_AUTO_LRC_CANONICAL_GOLDEN=1 \
+    MKL_NUM_THREADS=1 \
+    OMP_NUM_THREADS=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONHASHSEED=0 \
+    UV_LINK_MODE=copy
+
+WORKDIR /workspace
+
+RUN python -m pip install --no-cache-dir --only-binary=:all: uv==0.12.9
+
+COPY pyproject.toml uv.lock README.md LICENSE ./
+RUN uv sync --frozen --no-default-groups --group test --no-install-project
+
+ENV PYTHONPATH=/workspace
+
+COPY t2l ./t2l
+COPY tests/golden ./tests/golden
+COPY tests/fixtures/audio ./tests/fixtures/audio
+COPY assets ./assets
+COPY lid.176.ftz ./lid.176.ftz
+
+RUN uv pip install --no-deps --no-build-isolation .
+
+ENTRYPOINT ["/workspace/.venv/bin/python"]
+CMD ["-m", "pytest", "tests/golden/test_legacy_v1_feature_golden.py", "-q", "-p", "no:cacheprovider"]

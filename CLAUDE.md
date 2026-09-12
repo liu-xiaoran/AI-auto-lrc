@@ -1,119 +1,87 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Repository guidance for AI coding agents working on AI-auto-lrc v2.
 
-## Project Overview
+## Current delivery decision (2026-09-12)
 
-**track-lrc-align** is a Python inference CLI that aligns lyrics to audio and produces timestamped LRC output at word or line granularity. It supports Chinese, Japanese, Korean, English, and Russian.
+Read `docs/README.md` and `docs/PROJECT_STATUS.zh-CN.md` for current use and scope. The user explicitly authorized documentation updates and pushing the current development snapshot to the remote. That authorization satisfies the commit/push approval requirement for this delivery; do not ask again. Exhaustive abnormal-scenario coverage is deferred, not passed. Preserve existing checks and frozen evidence; no release tag, force push, or main-branch rewrite is authorized.
 
-The supported workflow is inference. Training/evaluation scripts under `t2l/mtl/` are not self-contained in this checkout: they reference missing modules and external data dependencies, so do not assume they are runnable.
+## Source of truth
 
-## Setup and Commands
+Read these before changing public behavior or LegacyV1 numerics:
 
-Use Python 3.9 or 3.10. Model checkpoints and the fastText language-identification model are stored with Git LFS.
+1. `docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md` — v2 contracts, milestones, test IDs, and Go/No-go gates.
+2. `docs/AI_REFACTOR_HANDOFF.zh-CN.md` — frozen `legacy-v1` behavior and evidence snapshot.
+3. `docs/BASELINE_PROVENANCE.md` — recovery and asset provenance.
+
+The handoff is historical evidence. Do not rewrite it to look like v2 current state. Do not describe a planned or host-only check as release qualification.
+
+## Locked v2 decisions
+
+- Python `>=3.10,<3.12`; `pyproject.toml + uv.lock` are the only dependency facts.
+- Public API: `AlignmentRequest`, `AlignmentResult`, `RuntimeConfig`, `create_runtime`, and `process(request, *, runtime=None)`.
+- Default line LRC, MTL, strict completeness, offline mode, torchaudio decoder, and Demucs off.
+- Partial output requires explicit opt-in and the CLI returns `3`.
+- CLI stdout XOR atomic output file; Python API does not write LRC or print its own progress; runtime asset preparation can create private copies and dependencies can emit warnings.
+- No public v1 CLI, old scattered-argument `process()`, five-element model tuple, or compatibility shim.
+- No implicit torchaudio-to-librosa fallback. `librosa-mono` is explicit.
+- No runtime CWD asset search or core implicit downloads. Optional Demucs may download weights and its offline enforcement remains unqualified.
+- Preserve LegacyV1 checkpoint architecture and numerics: 22,050 Hz, Mel 128/512/256, pooling 3, frame clock `768/22050`, first channel, LSTM `batch_first=True/False/False`, MTL reduction order, and BDR alpha 0.8.
+- X01-X03, training, and old evaluation are outside the v2 distribution.
+
+## Architecture boundaries
+
+```text
+t2l.api / CLI
+  -> application.AlignLyricsUseCase
+       -> LyricsPreparationPort
+       -> AudioPreparationPort
+       -> InferencePort
+       -> completeness policy
+       -> LrcRendererPort
+```
+
+`t2l.composition` is the sole default wiring root. Domain/application code must not import adapters, torch, torchaudio, librosa, Demucs, fastText, or the output sink. Posterior/Mel/boundary tensors stay inside the LegacyV1 adapter. CLI owns lyric-file decoding and LRC output; the Python API may read audio and configured local assets through its runtime and prepare private asset copies, but does not write LRC or actively print progress. The default core path is offline; optional Demucs has an unresolved offline-enforcement gap.
+
+## Environment and commands
 
 ```bash
 git lfs install
 git lfs pull
-pip install -r requirements.txt
+uv sync --frozen --python 3.11 --group dev
 ```
 
-Run commands from the repository root. Both checkpoint paths and `lid.176.ftz` are resolved relative to the current working directory.
+Basic unit and component tests (full selected core suite: `docs/TECHNICAL_GUIDE.zh-CN.md`):
 
 ```bash
-# Demo
-python main.py demofile/original_txt.txt demofile/original_track.mp3
-
-# General usage
-python main.py <lyrics_file> <audio_file> \
-  -f lrc \
-  -l 0 \
-  -v 1 \
-  -m mdx_extra \
-  -i -1 \
-  -o output
+uv run --offline --frozen --no-sync python -m pytest tests/unit -q -p no:cacheprovider
+uv run python -m pytest tests/component -q -p no:cacheprovider
 ```
 
-CLI options:
-- `-f/--format`: only `lrc` is accepted; SRT output is not implemented.
-- `-l/--line_only`: `0` for enhanced word-timed LRC, `1` for line-level output.
-- `-v/--vocalize`: `1` to separate vocals with Demucs, `0` to align the original audio directly.
-- `-m/--model`: Demucs model (`mdx`, `mdx_extra`, `mdx_q`, or `mdx_extra_q`).
-- `-i/--idx`: Demucs sub-model index; `-1` uses the ensemble, while `0`–`3` selects one sub-model.
-- `-o/--out_dir`: output directory, created by the CLI when absent.
-
-Tests use `pytest` and are designed to run without loading checkpoints, downloading Demucs models, or requiring a GPU.
+Validation:
 
 ```bash
-# Full lightweight regression suite
-python -m pytest -q
-
-# Single test module or test
-python -m pytest tests/test_alignment.py -q
-python -m pytest tests/test_alignment.py::test_alignment_minimum_valid_input_is_quiet -q
-
-# Syntax check
-python -m compileall main.py t2l tests
+uv lock --check
+uv run ruff check .
+uv run python -m compileall t2l tests
+uv build
 ```
 
-There is no configured linter, formatter, type checker, build system, or CI workflow in this repository. Do not invent commands for these.
+Do not install an undeclared package during a test to make it pass. Package tests must work with the declared test/build toolchain. Do not add Demucs back to core to satisfy deleted v1 tests.
 
-## Architecture
+## Test rules
 
-### Runtime Flow
+- Follow RED -> GREEN -> REFACTOR for changed behavior.
+- Keep stable specification IDs from the execution plan in test names, docstrings, or parameter IDs.
+- Unit tests are offline and asset-light; the contract directory also contains heavyweight security/process fixtures. Mark real assets/codecs as `component`, canonical comparisons as `golden`, and process/platform isolation checks as `system`; use only registered markers.
+- Use `Barrier`/`Event`, not `sleep()`, for concurrency tests.
+- Posterior arrays may use the approved tolerance; phone IDs, frame pairs, completeness status, and LRC bytes are exact.
+- A fake-only test does not qualify a real decoder, checkpoint path, natural partial outcome, installed wheel, offline build, or recovery process.
+- Never update golden data, widen tolerance, enable partial, or change decoder to conceal a regression.
+- Unexpected exceptions remain unexpected in the Python API; CLI maps them to code 1. Do not wrap `KeyboardInterrupt`, `SystemExit`, or `GeneratorExit` as domain failures.
 
-```text
-main.py
-  -> detect lyrics-file encoding and read lines
-  -> t2l/t2l.py: process()
-       -> remove existing LRC/metadata tags and validate lyrics
-       -> t2l/phonetic.py: detect language and romanize/transliterate words
-       -> load audio (torchaudio, with librosa fallback)
-       -> optionally isolate vocals with Demucs
-       -> resample to 22,050 Hz
-       -> t2l/mtl/utils.py: convert normalized words to model phoneme IDs with g2p_en
-       -> t2l/mtl/wrapper.py: load acoustic model and compute mel features
-       -> CNN-BiLSTM phoneme posterior prediction
-       -> t2l/mtl/utils.py: DTW-style phoneme/word alignment
-       -> gen_lrc(): convert frame starts to LRC timestamps
-  -> print enhanced LRC and write a standard line-timestamp LRC file
-```
+## Change and commit gates
 
-`main.py` is the CLI boundary. It calls `process()` for enhanced output, prints that output, then writes `<audio-basename>.lrc` under `--out_dir` using one timestamp per lyric line.
+The approved execution plan is Gate 1. Continue implementing and validating in small slices. Before a commit, provide the intended file set, validation evidence, unresolved gates, and Conventional Commit message, then wait for explicit Gate 2 approval. Do not push or rewrite Git history without separate explicit authorization.
 
-`t2l/t2l.py` orchestrates input cleanup, audio loading, optional Demucs separation, alignment, and LRC generation. Its primary API is:
-
-```python
-process(txt_lines, audio_file, mtl_model='MTL', demucs_model='mdx_extra',
-        demucs_idx=-1, line_only=False, out_file=None, verbose=True,
-        vocalize=True, format='lrc')
-```
-
-`t2l/phonetic.py` loads `lid.176.ftz` at import time. Script regexes take precedence over fastText: Japanese kana, CJK ideographs, Hangul, and Cyrillic map directly to `ja`, `zh`, `ko`, and `ru`; remaining text uses fastText. Language-specific libraries then normalize, romanize, or transliterate the words. `gen_phone_gt_opt()` in `t2l/mtl/utils.py` subsequently uses `g2p_en` to convert those tokens into the phoneme IDs consumed by the acoustic model.
-
-`t2l/mtl/wrapper.py` owns feature extraction, checkpoint loading, acoustic-model inference, and dispatch to alignment. It accepts mono `[samples]` or channel-first `[channels, samples]` audio; multichannel input uses the first channel rather than concatenating channels along the time axis. Acoustic and optional boundary-model forward passes run under `torch.inference_mode()`. `t2l/mtl/model.py` defines the CNN-BiLSTM model; `t2l/mtl/utils.py` contains the alignment algorithms.
-
-### Models and Alignment
-
-Runtime checkpoints live under `./checkpoints/`:
-- `checkpoint_Baseline`: single-task acoustic model with 41 phoneme classes.
-- `checkpoint_MTL`: multi-task model with 41- and 47-class outputs; this is the CLI default.
-- `checkpoint_BDR`: boundary detector used by `*_BDR` alignment methods.
-
-`align()` accepts `"Baseline"`, `"MTL"`, `"Baseline_BDR"`, or `"MTL_BDR"`. It also accepts the tuple returned by `load_mtl_model()` so callers can preload models and avoid repeated initialization. `t2l/init_model.py` re-exports the loader; its module globals are defaults, not preloaded model instances.
-
-Important signal constants:
-- sample rate: 22,050 Hz
-- mel bins: 128
-- FFT size: 512
-- timestamp frame resolution: `256 / 22050 * 3` seconds (about 34.8 ms)
-
-CUDA is used when available; both Demucs and the acoustic model fall back to CPU.
-
-### Failure and Boundary Behavior
-
-- `TxtValueError` indicates empty or invalid lyrics after parsing.
-- `AudioValueError` indicates that both torchaudio and librosa failed to load usable audio; Demucs/model/CUDA failures retain their original exception type.
-- `AlignmentValueError` indicates that the audio-frame/phoneme dimensions or word/line indices cannot form a valid DTW path.
-- `gen_lrc()` truncates safely when alignment results contain fewer words than the parsed lyrics instead of indexing past `word_align`.
-- `pykakasi`, used for Japanese romanization, is GPL-licensed; account for that when changing distribution or licensing.
+The verified Git bundle does not include LFS objects or current untracked changes. Preserve user changes, inspect `git status`, and do not claim disaster recovery until the plan's independent LFS/dirty-state archive and offline restore drill pass.

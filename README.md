@@ -1,202 +1,233 @@
-# track-lrc-align
+# AI-auto-lrc v2
 
-> AI-powered lyrics-to-music alignment tool — produce timestamped LRC files with per-word or per-line timing from plain text lyrics and audio.
+## Copyable prompt for an AI assistant
 
-[中文文档](README_zh.md)
+```text
+Help me generate an LRC file with AI-auto-lrc v2.
+Repository: <absolute repository path>
+Lyrics: <absolute UTF-8 lyrics path>
+Audio: <absolute path to the matching recording>
+Output: <absolute path to a new LRC file>
+Read docs/README.md, docs/USER_GUIDE.zh-CN.md and docs/PROJECT_STATUS.zh-CN.md
+first; for integration or edits also read the technical guide and CLAUDE.md.
+Check the branch, Python 3.10/3.11, pyproject.toml/uv.lock and all six runtime assets.
+Use the v2 ai-auto-lrc CLI from the project's environment, with explicit paths.
+Start with CPU, MTL, line timestamps, strict completeness and no vocal separation.
+Use a canonical output path. Once dependencies and assets are ready, run offline.
+Ask for missing required input paths; do not invent lyrics or timestamps.
+Do not silently enable partial output, change decoder or download optional models.
+Respect my overwrite intent or choose a new output file. Verify the actual exit
+code, output content, line count and monotonic timestamps. Report the command,
+output path and failures. Successful execution is not proof of alignment accuracy.
+Exhaustive abnormal scenarios are deferred; do not claim unverified release gates pass.
+```
 
-## Overview
+[Documentation index](docs/README.md) · [Usage](docs/USER_GUIDE.zh-CN.md) · [System overview](docs/SYSTEM_OVERVIEW.zh-CN.md) · [Technical guide](docs/TECHNICAL_GUIDE.zh-CN.md) · [Current status](docs/PROJECT_STATUS.zh-CN.md)
 
-`track-lrc-align` takes a lyrics text file and an audio file, then generates a synced LRC file. It uses a CNN-RNN acoustic model with DTW (Dynamic Time Warping) alignment to map phonemes to audio frames. Built-in vocal separation via [Demucs](https://github.com/adefossez/demucs) improves alignment accuracy by isolating the singing voice.
+> 2026-09-12: Exhaustive abnormal-scenario coverage is deferred by user decision. This is an Alpha development snapshot with updated documentation; release qualification remains incomplete. The detailed guides are in Chinese.
 
-**Supported languages**: Chinese (zh), Japanese (ja), Korean (ko), English (en), Russian (ru)
 
-## Installation
+Offline-first lyrics-to-audio alignment with standard line-level or optional word-level LRC output.
+
+[中文说明](README_zh.md) · [v2 execution and test plan](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md) · [LegacyV1 handoff](docs/AI_REFACTOR_HANDOFF.zh-CN.md)
+
+> Status: `2.0.0a0` development build. The v2 API and core adapters are implemented, but release qualification is still in progress. Do not treat the current checkout as a production release or as evidence of alignment quality.
+
+## Locked v2 behavior
+
+- Python `>=3.10,<3.12`.
+- Default output is standard line-level LRC.
+- Default acoustic route is `MTL` using the frozen `legacy-v1` profile.
+- Vocal separation is off by default; Demucs is an optional extra and never loads on the default path.
+- Core execution is offline. Runtime assets must already be present and pass the bundled manifest checks.
+- Incomplete alignment fails by default. `--allow-partial` explicitly enables a contiguous-prefix result and returns exit code `3`.
+- `torchaudio` is the default decoder. `librosa-mono` is an explicit policy, not an automatic fallback.
+- Without `-o`, stdout contains only UTF-8 LRC. With `-o`, stdout is empty and the file is replaced atomically.
+- The Python API returns a structured result and does not write LRC files or print its own progress. Runtime preparation still reads inputs and materializes private asset copies; dependencies may emit warnings.
+
+## Installation for development
+
+Model checkpoints and the fastText language-identification model are stored outside the wheel and must be available locally. A development checkout normally obtains them through Git LFS.
 
 ```bash
-git clone https://github.com/liu-xiaoran/auto-lrc.git
-cd auto-lrc
-
-# Git LFS is required for model checkpoints
 git lfs install
 git lfs pull
-
-pip install -r requirements.txt
+uv sync --frozen --python 3.11 --group test
 ```
 
-> Python 3.9 / 3.10 is recommended. The project requires PyTorch and Demucs, so GPU support is recommended for reasonable performance.
-
-Run the lightweight CPU-only regression suite with:
+To install the optional vocal-separation stack:
 
 ```bash
-python -m pytest -q
+uv sync --frozen --extra vocals --group test
 ```
 
-The tests use synthetic data and do not load checkpoints or download Demucs models.
+`pyproject.toml` and `uv.lock` are the dependency sources of truth. The legacy `requirements.txt`, `Pipfile`, and `Pipfile.lock` have been retired and are not v2 installation inputs.
 
-## Quick Start
+## Runtime assets
+
+The asset root is resolved in this order:
+
+1. `RuntimeConfig.asset_root` or CLI `--asset-root`;
+2. `T2L_ASSET_ROOT`;
+3. the repository root, only when running from a recognized development checkout.
+
+The current LegacyV1 root contains:
+
+```text
+checkpoints/checkpoint_Baseline
+checkpoints/checkpoint_MTL
+checkpoints/checkpoint_BDR
+lid.176.ftz
+assets/nltk_data/corpora/cmudict.zip
+assets/nltk_data/taggers/averaged_perceptron_tagger.zip
+```
+
+An explicit API asset root must be an absolute Path. The CLI resolves its input; absolute paths are recommended. Assets are checked for path escape, Git LFS pointer content, expected size, and SHA-256 before model deserialization. The current working directory is never searched for similarly named files.
+
+## CLI
 
 ```bash
-python main.py demofile/original_txt.txt demofile/original_track.mp3
+uv run ai-auto-lrc LYRICS_FILE AUDIO_FILE \
+  --asset-root /absolute/path/to/assets
 ```
 
-This runs the full pipeline with default settings: word-level alignment, Demucs vocal separation (mdx_extra ensemble), and prints the enhanced LRC (with per-word timestamps) to terminal. A standard LRC file (line-level timestamps only) is automatically saved to `demofile/original_track.lrc`.
-
-### CLI Options
-
-```
-python main.py <lyrics_file> <audio_file> [options]
-
-Options:
-  -f, --format     Output format: lrc only (default)
-  -l, --line_only  1 = line-level timestamps, 0 = word-level (default)
-  -v, --vocalize   1 = separate vocals via Demucs (default), 0 = skip
-  -m, --model      Demucs model: mdx | mdx_extra (default) | mdx_q | mdx_extra_q
-  -i, --idx        Demucs model index: -1 = ensemble (default), 0-3 = single sub-model
-  -o, --out_dir    Standard LRC output directory (default: demofile)
-```
-
-### Examples
+The default command writes one trailing newline to stdout and does not create an output file. To write a file instead:
 
 ```bash
-# Word-level with vocal separation (default)
-# Prints enhanced LRC to terminal, saves standard LRC to demofile/song.lrc
-python main.py lyrics.txt song.mp3
-
-# Line-level, no vocal separation (faster)
-python main.py lyrics.txt song.mp3 -l 1 -v 0
-
-# Use a lighter Demucs model
-python main.py lyrics.txt song.mp3 -m mdx_q
-
-# Specify a custom output directory for standard LRC
-python main.py lyrics.txt song.mp3 -o output
+uv run ai-auto-lrc lyrics.txt song.wav \
+  --asset-root /absolute/path/to/assets \
+  -o output/song.lrc
 ```
+
+Important options:
+
+```text
+--timestamps line|word
+--acoustic-model Baseline|MTL|Baseline_BDR|MTL_BDR
+--allow-partial
+--device auto|cpu|cuda
+--asset-root ABSOLUTE_PATH
+--decoder torchaudio|librosa-mono
+--separate-vocals
+--demucs-model mdx|mdx_extra|mdx_q|mdx_extra_q
+--demucs-index -1|0|1|2|3
+--verbose
+--debug
+```
+
+`--demucs-model` and `--demucs-index` require `--separate-vocals`. The default path does not import or download Demucs. Optional separation may download weights; offline configuration is not fully enforced by that adapter and offline qualification is pending.
+
+### Exit codes
+
+| Code | Meaning | LRC may exist |
+|---:|---|---|
+| 0 | Complete result | Yes |
+| 1 | Unexpected internal error | No |
+| 2 | CLI/configuration error | No |
+| 3 | Explicitly allowed partial result | Yes |
+| 4 | Lyrics input error | No |
+| 5 | Audio decode or vocal-separation error | No |
+| 6 | Asset, checkpoint, model, or device error | No |
+| 7 | Alignment error or strict rejection of a partial result | No |
+| 8 | Output write error | No |
+
+Progress and diagnostics go to stderr. Scripts that intentionally accept partial output should handle both `0` and `3`; treating only `0` as success preserves strict completeness.
 
 ## Python API
 
 ```python
-from t2l.t2l import process
+from pathlib import Path
 
-lrc = process(
-    txt_lines,              # list[str]: lyrics lines
-    "song.mp3",             # audio file path
-    mtl_model="MTL",        # "Baseline" | "MTL" | "Baseline_BDR" | "MTL_BDR"
-                            # or a pre-loaded model tuple from init_model
-    demucs_model="mdx_extra",
-    demucs_idx=-1,
-    line_only=False,        # True for line-level, False for word-level
-    out_file="output.lrc",  # optional: write to file
-    verbose=True,
-    vocalize=True,          # set False to skip Demucs and use raw audio
-    format="lrc"
+from t2l import AlignmentRequest, RuntimeConfig, create_runtime
+
+runtime = create_runtime(
+    RuntimeConfig(
+        asset_root=Path("/absolute/path/to/assets"),
+        decoder="torchaudio",
+        offline=True,
+    )
 )
-print(lrc)
+
+result = runtime.process(
+    AlignmentRequest(
+        lyrics=("First line", "Second line"),
+        audio_path=Path("song.wav"),
+        timestamp_mode="line",
+        acoustic_model="MTL",
+    )
+)
+
+print(result.status)
+print(result.lrc)
+print(result.spans)
+print(result.diagnostics)
 ```
 
-The `format` argument currently accepts only `"lrc"`; unsupported values raise `ValueError`. When alignment runs directly on multichannel audio (`vocalize=False`), the first channel is used for compatibility with earlier output while avoiding channel concatenation.
+Reuse one runtime for repeated calls when you want its lazy language/model resources to be reused. Different runtimes isolate their caches. The current LegacyV1 inference adapter serializes load and inference within one runtime.
 
-To avoid repeated model loading across multiple calls, use `t2l.init_model`:
+## Architecture
 
-```python
-from t2l.t2l import process
-from t2l.init_model import load_mtl_model
-
-model = load_mtl_model("MTL")  # load once
-lrc1 = process(lines1, "song1.mp3", mtl_model=model)
-lrc2 = process(lines2, "song2.mp3", mtl_model=model)
+```text
+CLI / Python API
+  -> AlignmentRequest
+  -> AlignLyricsUseCase
+       -> LyricsPreparationPort
+       -> AudioPreparationPort
+       -> InferencePort (LegacyV1 feature/model/DTW/BDR)
+       -> strict/partial completeness policy
+       -> LrcRendererPort
+  -> AlignmentResult
+  -> CLI only: stdout XOR atomic file sink
 ```
 
-## How It Works
+`t2l.composition` is the default composition root. Application and domain modules do not depend on torch, torchaudio, librosa, Demucs, fastText, or filesystem output. LegacyV1 preserves the existing checkpoint architecture, first-channel policy, timebase (`768 / 22050` seconds per frame), MTL reduction order, BDR alpha, and historical LSTM axis semantics.
 
-```
-lyrics text + audio file
-  │
-  ├─ phonetic.py
-  │   Language detection: regex for CJK/Cyrillic → fastText fallback (lid.176.ftz)
-  │   Phonemization: convert characters to ASCII phonemes per language
-  │     zh → pypinyin
-  │     ja → pykakasi
-  │     ko → kroman
-  │     ru → cyrtranslit
-  │     en → g2p_en
-  │
-  ├─ t2l.py
-  │   Audio loading: torchaudio.load → librosa.load (fallback)
-  │   Vocal separation: Demucs (mdx_extra ensemble, 4 sub-models)
-  │   Resample to 22050 Hz
-  │
-  ├─ mtl/wrapper.py
-  │   Mel-spectrogram (128 bins, FFT 512)
-  │   CNN-RNN acoustic model → phoneme posteriorgram
-  │   DTW alignment (utils.alignment / alignment_bdr)
-  │
-  └─ gen_lrc()
-      Frame indices → [MM:SS.mmm] timestamps
-      Output LRC with per-word <timestamp> tags
+## Tests
+
+Lightweight unit tests (see the technical guide for the core validation suite):
+
+```bash
+uv run --offline --frozen --no-sync python -m pytest tests/unit -q -p no:cacheprovider
 ```
 
-### Model Checkpoints
+Local component tests, including the checked-in LegacyV1 checkpoints:
 
-Stored in `./checkpoints/`, managed via Git LFS:
-
-| Checkpoint | Type | Description |
-|---|---|---|
-| `checkpoint_Baseline` | Single-task | Acoustic model, 41 phoneme classes |
-| `checkpoint_MTL` | Multi-task | Default model, classes (41, 47) |
-| `checkpoint_BDR` | Boundary detection | 1.8 MB, used with `*_BDR` variants |
-
-The `method` parameter in the alignment pipeline accepts `"Baseline"`, `"MTL"`, `"Baseline_BDR"`, or `"MTL_BDR"`. BDR variants include boundary detection for more precise word onsets.
-
-### Key Parameters
-
-| Parameter | Value | Notes |
-|---|---|---|
-| Sample rate | 22050 Hz | Target rate after resampling |
-| Frame resolution | ~0.0348s | `256 / 22050 * 3` seconds per frame |
-| Mel features | 128 | Used in `train_audio_transforms` |
-| FFT size | 512 | Spectrogram computation |
-
-## Output
-
-The CLI produces two outputs:
-
-1. **Enhanced LRC** — printed to terminal, with per-word `<mm:ss.xxx>` timestamps for detailed alignment
-2. **Standard LRC** — saved to `demofile/` (or directory specified by `-o`), with only line-level `[mm:ss.xxx]` timestamps, compatible with standard LRC players
-
-The standard LRC filename is derived from the audio filename, e.g. `song.mp3` → `demofile/song.lrc`.
-
-## Output Format
-
-### Word-level LRC
-
-```lrc
-[00:00.120]<00:00.120>Hel<00:00.240>lo<00:00.360> <00:00.480>World
-[00:01.000]<00:01.000>这<00:01.120>是<00:01.240>一<00:01.360>首歌
+```bash
+uv run python -m pytest tests/component -q -p no:cacheprovider
 ```
 
-Each word is prefixed with its start timestamp in angle brackets, and each line begins with a line-level timestamp in square brackets.
+Build and static checks:
 
-### Line-level LRC
-
-```lrc
-[00:00.120]Hello World
-[00:01.000]这是一首歌
+```bash
+uv sync --frozen --group dev
+uv lock --check
+uv run ruff check .
+uv run python -m compileall t2l tests
+uv build
 ```
 
-Only line-level timestamps are included.
+Linux CPython 3.10 functional canonical evidence, real WAV/MP3 cases, concurrent initialization, and a Linux x86_64 cold-cache offline install are now covered; they are still not release proof. The release plan still requires an approved natural non-empty partial contract, complete resource limits, macOS cold installation and a two-platform aggregator, offline Demucs coverage, clean signed provenance, SBOM/attestation, and recovery/rollback drills. A host-only or single-platform green suite does not replace those gates.
 
-## Requirements
+The macOS / Python 3.11 R3 security-runtime baseline has a separate, explicit system test
+entrypoint (outside the portable contract layer):
 
-Core dependencies (full list in `requirements.txt`):
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python -m pytest \
+  tests/system/test_security_runtime_identity_r3.py -q -p no:cacheprovider
+```
 
-- **PyTorch / torchaudio** — audio processing and model inference
-- **Demucs** — vocal/instrumental separation
-- **librosa** — audio loading fallback
-- **fastText** — language detection for non-CJK text
-- **pypinyin / pykakasi / kroman / cyrtranslit / g2p-en** — phonemization per language
+It runs the original capture and retention suites and verifier serially, denies
+IP networking and writes to the checkout/runtime, and permits Unix socket binding
+only inside its temporary evidence directory. Raw artifacts and before/after
+inventories remain in the pytest temporary directory. This is a macOS baseline,
+not qualification of adversarial scenarios, other platforms, or a release.
 
-> `pykakasi` (Japanese romanization) is GPL-licensed. Be aware of this if you plan to use this project under a different license.
+## Migration from v1
 
-## License
+v2 intentionally does not publish the old `t2l.t2l.process(...)` signature, preloaded five-element model tuples, implicit decoder fallback, default Demucs behavior, or automatic enhanced-to-standard LRC conversion. Migrate callers to `AlignmentRequest`/`AlignmentResult` and choose output, decoder, partial, and vocal-separation policies explicitly.
 
-See [LICENSE](LICENSE) for details.
+Use the [v1-to-v2 migration guide](docs/V1_TO_V2_MIGRATION.zh-CN.md) for the parameter-by-parameter mapping and exit-code handling. The frozen v1 facts and exact behavior boundaries are retained in [the handoff document](docs/AI_REFACTOR_HANDOFF.zh-CN.md); the executable validation gates are in [the v2 plan](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md).
+
+## License and provenance
+
+See [LICENSE](LICENSE) and [BASELINE_PROVENANCE.md](docs/BASELINE_PROVENANCE.md). Some language-processing dependencies and model assets have their own licenses. Internal test authorization is not the same as verified redistribution rights; release artifacts must pass the plan's license and provenance gates.

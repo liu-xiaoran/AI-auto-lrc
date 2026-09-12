@@ -1,200 +1,226 @@
-# track-lrc-align
+# AI-auto-lrc v2
 
-> AI 驱动的歌词对齐工具 — 从纯文本歌词和音频文件生成带时间戳的 LRC 文件，支持逐字或逐句对齐。
+## 交给 AI 的使用提示词（复制后替换路径）
 
-[English](README.md)
+```text
+请帮我使用 AI-auto-lrc v2 生成 LRC。
+项目目录：<项目绝对路径>
+歌词文件：<UTF-8 歌词绝对路径>
+音频文件：<对应歌曲音频绝对路径>
+输出文件：<新的 LRC 绝对路径>
+先阅读 docs/README.md、docs/USER_GUIDE.zh-CN.md、docs/PROJECT_STATUS.zh-CN.md；
+集成或改代码时再读 docs/TECHNICAL_GUIDE.zh-CN.md 和 CLAUDE.md。
+核对当前分支、Python 3.10/3.11、pyproject.toml/uv.lock 及六项运行资产。
+使用 v2 的 ai-auto-lrc CLI；从项目外运行时使用该环境可执行文件。
+默认 CPU、MTL、行级、严格完整、不分离人声，使用规范真实输出路径。
+依赖与资产齐备后离线执行；缺少必要路径先向我确认，不猜测歌曲或歌词。
+不要自动启用 partial、更换 decoder、下载可选模型或编造时间戳。
+已有输出需要按我的覆盖意图处理，否则选新文件。检查实际退出码、LRC 内容、
+行数和时间单调性，报告命令、输出位置与错误；成功运行不等于准确率合格。
+本轮不要求异常全覆盖，不把未验证的平台、安全或发布门禁描述为通过。
+```
 
-## 概述
+[文档导航](docs/README.md) · [如何使用](docs/USER_GUIDE.zh-CN.md) · [系统说明](docs/SYSTEM_OVERVIEW.zh-CN.md) · [技术文档](docs/TECHNICAL_GUIDE.zh-CN.md) · [当前进展](docs/PROJECT_STATUS.zh-CN.md)
 
-`track-lrc-align` 接受歌词文本文件和音频文件，生成同步的 LRC 文件。它使用 CNN-RNN 声学模型配合 DTW（动态时间规整）对齐算法，将音素映射到音频帧。内置的 [Demucs](https://github.com/adefossez/demucs) 人声分离功能可隔离人声，提升对齐精度。
+> 2026-09-12：按用户决定暂缓异常场景全覆盖，交付当前开发分支及完整说明；版本仍为 Alpha，发布门禁保持未通过。
 
-**支持语言**：中文（zh）、日文（ja）、韩文（ko）、英文（en）、俄文（ru）
 
-## 安装
+离线优先的歌词—音频对齐工具，输出标准行级 LRC，也可显式选择逐词时间戳。
+
+[English](README.md) · [v2 执行与测试计划](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md) · [LegacyV1 交接事实](docs/AI_REFACTOR_HANDOFF.zh-CN.md)
+
+> 当前状态：`2.0.0a0` 开发版本。v2 API 和核心适配器已经实现，但发布资格仍在验证中。当前 checkout 不是生产发行版，也不能作为对齐质量证明。
+
+## v2 锁定行为
+
+- Python `>=3.10,<3.12`。
+- 默认输出标准行级 LRC。
+- 默认声学路径为 `MTL`，使用冻结的 `legacy-v1` profile。
+- 人声分离默认关闭；Demucs 是可选 extra，默认路径不得加载。
+- 核心路径默认离线；运行资产必须预先存在并通过包内 manifest 校验。
+- 默认严格拒绝不完整对齐；显式 `--allow-partial` 只允许连续前缀结果，并返回退出码 `3`。
+- 默认 decoder 是 `torchaudio`；`librosa-mono` 必须显式选择，不自动回退。
+- 不带 `-o` 时 stdout 只含 UTF-8 LRC；带 `-o` 时 stdout 为空，文件采用原子替换。
+- Python API 返回结构化结果，不写 LRC、不主动打印进度；运行时仍读取输入并准备私有资产副本，依赖可能产生警告。
+
+## 开发环境安装
+
+模型 checkpoint 和 fastText 语言识别模型不进入 wheel，必须作为本地资产提供。开发 checkout 通常通过 Git LFS 获取：
 
 ```bash
-git clone https://github.com/liu-xiaoran/auto-lrc.git
-cd auto-lrc
-
-# 模型检查点需要 Git LFS
 git lfs install
 git lfs pull
-
-pip install -r requirements.txt
+uv sync --frozen --python 3.11 --group test
 ```
 
-> 推荐使用 Python 3.9 / 3.10。项目依赖 PyTorch 和 Demucs，建议使用 GPU 以获得合理的运行速度。
-
-运行不加载检查点、不下载 Demucs 模型的轻量 CPU 回归测试：
+需要可选人声分离能力时：
 
 ```bash
-python -m pytest -q
+uv sync --frozen --extra vocals --group test
 ```
 
-## 快速开始
+`pyproject.toml + uv.lock` 是 v2 唯一依赖事实源。旧 `requirements.txt`、`Pipfile` 和 `Pipfile.lock` 已退役，不再是 v2 安装入口。
+
+## 运行资产
+
+资产根按以下优先级解析：
+
+1. `RuntimeConfig.asset_root` 或 CLI `--asset-root`；
+2. `T2L_ASSET_ROOT`；
+3. 仅在识别为开发 checkout 时使用仓库根。
+
+当前 LegacyV1 资产根包含：
+
+```text
+checkpoints/checkpoint_Baseline
+checkpoints/checkpoint_MTL
+checkpoints/checkpoint_BDR
+lid.176.ftz
+assets/nltk_data/corpora/cmudict.zip
+assets/nltk_data/taggers/averaged_perceptron_tagger.zip
+```
+
+API 显式 asset root 必须是绝对 Path；CLI 会规范化传入路径，推荐始终提供绝对路径。资产在反序列化前检查路径逃逸、Git LFS pointer、文件大小和 SHA-256；程序绝不在任意当前工作目录搜索同名 checkpoint。
+
+## 命令行
 
 ```bash
-python main.py demofile/original_txt.txt demofile/original_track.mp3
+uv run ai-auto-lrc 歌词文件 音频文件 \
+  --asset-root /绝对路径/资产根
 ```
 
-以默认设置运行完整流水线：逐字对齐、Demucs 人声分离（mdx_extra 集成模型）。终端打印增强型 LRC（含逐字时间戳），标准 LRC 文件（仅行级时间戳）自动保存到 `demofile/original_track.lrc`。
-
-### 命令行参数
-
-```
-python main.py <歌词文件> <音频文件> [选项]
-
-选项：
-  -f, --format     输出格式：仅支持 lrc（默认）
-  -l, --line_only  1 = 逐句时间戳，0 = 逐字时间戳（默认）
-  -v, --vocalize   1 = 通过 Demucs 分离人声（默认），0 = 跳过
-  -m, --model      Demucs 模型：mdx | mdx_extra（默认）| mdx_q | mdx_extra_q
-  -i, --idx        Demucs 模型索引：-1 = 集成（默认），0-3 = 单个子模型
-  -o, --out_dir    标准 LRC 输出目录（默认：demofile）
-```
-
-### 示例
+默认命令把带一个尾换行的 LRC 写到 stdout，不创建输出文件。写入文件时使用：
 
 ```bash
-# 逐字对齐 + 人声分离（默认）
-# 终端打印增强型 LRC，标准 LRC 保存到 demofile/song.lrc
-python main.py lyrics.txt song.mp3
-
-# 逐句对齐，不分离人声（更快）
-python main.py lyrics.txt song.mp3 -l 1 -v 0
-
-# 使用更轻量的 Demucs 模型
-python main.py lyrics.txt song.mp3 -m mdx_q
-
-# 指定标准 LRC 输出目录
-python main.py lyrics.txt song.mp3 -o output
+uv run ai-auto-lrc lyrics.txt song.wav \
+  --asset-root /绝对路径/资产根 \
+  -o output/song.lrc
 ```
+
+主要选项：
+
+```text
+--timestamps line|word
+--acoustic-model Baseline|MTL|Baseline_BDR|MTL_BDR
+--allow-partial
+--device auto|cpu|cuda
+--asset-root 绝对路径
+--decoder torchaudio|librosa-mono
+--separate-vocals
+--demucs-model mdx|mdx_extra|mdx_q|mdx_extra_q
+--demucs-index -1|0|1|2|3
+--verbose
+--debug
+```
+
+`--demucs-model` 和 `--demucs-index` 必须与 `--separate-vocals` 一起使用。默认路径不会导入或下载 Demucs。可选分离路径可能下载权重，当前 offline 配置未在该分离器中完整执行，离线能力尚未验收。
+
+### 退出码
+
+| 退出码 | 语义 | 是否可能已有 LRC |
+|---:|---|---|
+| 0 | 完整成功 | 是 |
+| 1 | 未分类内部错误 | 否 |
+| 2 | CLI/配置错误 | 否 |
+| 3 | 用户显式允许的 partial | 是 |
+| 4 | 歌词输入错误 | 否 |
+| 5 | 音频解码或人声分离错误 | 否 |
+| 6 | 资产、checkpoint、模型或设备错误 | 否 |
+| 7 | 对齐错误或 strict 拒绝 partial | 否 |
+| 8 | 输出文件写入错误 | 否 |
+
+进度和诊断只进入 stderr。有意接受 partial 的脚本可以同时处理 `0` 和 `3`；只接受 `0` 则保持严格完整性。
 
 ## Python API
 
 ```python
-from t2l.t2l import process
+from pathlib import Path
 
-lrc = process(
-    txt_lines,              # list[str]：歌词行列表
-    "song.mp3",             # 音频文件路径
-    mtl_model="MTL",        # "Baseline" | "MTL" | "Baseline_BDR" | "MTL_BDR"
-                            # 或通过 init_model 预加载的模型元组
-    demucs_model="mdx_extra",
-    demucs_idx=-1,
-    line_only=False,        # True = 逐句，False = 逐字
-    out_file="output.lrc",  # 可选：写入文件
-    verbose=True,
-    vocalize=True,          # 设为 False 跳过 Demucs，直接使用原始音频
-    format="lrc"
+from t2l import AlignmentRequest, RuntimeConfig, create_runtime
+
+runtime = create_runtime(
+    RuntimeConfig(
+        asset_root=Path("/absolute/path/to/assets"),
+        decoder="torchaudio",
+        offline=True,
+    )
 )
-print(lrc)
+
+result = runtime.process(
+    AlignmentRequest(
+        lyrics=("第一行", "第二行"),
+        audio_path=Path("song.wav"),
+        timestamp_mode="line",
+        acoustic_model="MTL",
+    )
+)
+
+print(result.status)
+print(result.lrc)
+print(result.spans)
+print(result.diagnostics)
 ```
 
-`format` 参数当前仅接受 `"lrc"`，其他值会抛出 `ValueError`。直接对齐多声道原始音频（`vocalize=False`）时，为兼容既有输出并避免声道首尾串接，程序使用第一个声道。
+重复调用时可以复用一个 runtime，以复用其惰性语言/模型资源；不同 runtime 的缓存相互隔离。当前 LegacyV1 adapter 会在同一 runtime 内串行执行模型加载和推理。
 
-如需避免多次调用时重复加载模型，可使用 `t2l.init_model`：
+## 架构
 
-```python
-from t2l.t2l import process
-from t2l.init_model import load_mtl_model
-
-model = load_mtl_model("MTL")  # 只加载一次
-lrc1 = process(lines1, "song1.mp3", mtl_model=model)
-lrc2 = process(lines2, "song2.mp3", mtl_model=model)
+```text
+CLI / Python API
+  -> AlignmentRequest
+  -> AlignLyricsUseCase
+       -> LyricsPreparationPort
+       -> AudioPreparationPort
+       -> InferencePort（LegacyV1 特征/模型/DTW/BDR）
+       -> strict/partial 完整性策略
+       -> LrcRendererPort
+  -> AlignmentResult
+  -> 仅 CLI：stdout XOR 原子文件 sink
 ```
 
-## 工作原理
+`t2l.composition` 是默认 composition root。application/domain 不依赖 torch、torchaudio、librosa、Demucs、fastText 或文件输出。LegacyV1 冻结现有 checkpoint 架构、首声道策略、帧时钟（`768 / 22050` 秒/帧）、MTL reduction 顺序、BDR alpha 和历史 LSTM 轴语义。
 
-```
-歌词文本 + 音频文件
-  │
-  ├─ phonetic.py
-  │   语言检测：正则匹配 CJK/西里尔字母 → fastText 回退（lid.176.ftz）
-  │   音素化：将字符转为 ASCII 音素
-  │     zh → pypinyin
-  │     ja → pykakasi
-  │     ko → kroman
-  │     ru → cyrtranslit
-  │     en → g2p_en
-  │
-  ├─ t2l.py
-  │   音频加载：torchaudio.load → librosa.load（回退）
-  │   人声分离：Demucs（mdx_extra 集成模型，4 个子模型）
-  │   重采样至 22050 Hz
-  │
-  ├─ mtl/wrapper.py
-  │   梅尔频谱图（128 bins，FFT 512）
-  │   CNN-RNN 声学模型 → 音素后验概率图
-  │   DTW 对齐（utils.alignment / alignment_bdr）
-  │
-  └─ gen_lrc()
-      帧索引 → [MM:SS.mmm] 时间戳
-      输出含逐字 <timestamp> 标签的 LRC
+## 测试
+
+轻量单元测试（完整核心验证命令见技术指南）：
+
+```bash
+uv run --offline --frozen --no-sync python -m pytest tests/unit -q -p no:cacheprovider
 ```
 
-### 模型检查点
+包含本地 LegacyV1 checkpoint 的组件测试：
 
-存储在 `./checkpoints/`，通过 Git LFS 管理：
-
-| 检查点 | 类型 | 说明 |
-|---|---|---|
-| `checkpoint_Baseline` | 单任务 | 声学模型，41 个音素类 |
-| `checkpoint_MTL` | 多任务 | 默认模型，类数 (41, 47) |
-| `checkpoint_BDR` | 边界检测 | 1.8 MB，与 `*_BDR` 变体配合使用 |
-
-对齐流水线的 `method` 参数接受 `"Baseline"`、`"MTL"`、`"Baseline_BDR"` 或 `"MTL_BDR"`。BDR 变体包含边界检测，可获得更精确的字词起始时间。
-
-### 关键参数
-
-| 参数 | 值 | 说明 |
-|---|---|---|
-| 采样率 | 22050 Hz | 重采样目标采样率 |
-| 帧分辨率 | ~0.0348s | `256 / 22050 * 3` 秒/帧 |
-| 梅尔特征数 | 128 | 用于 `train_audio_transforms` |
-| FFT 大小 | 512 | 频谱图计算 |
-
-## 输出
-
-CLI 产生两种输出：
-
-1. **增强型 LRC** — 打印到终端，含逐字 `<mm:ss.xxx>` 时间戳，用于精细对齐
-2. **标准 LRC** — 保存到 `demofile/`（或 `-o` 指定的目录），仅含行级 `[mm:ss.xxx]` 时间戳，兼容标准 LRC 播放器
-
-标准 LRC 文件名取自音频文件名，例如 `song.mp3` → `demofile/song.lrc`。
-
-## 输出格式
-
-### 逐字 LRC
-
-```lrc
-[00:00.120]<00:00.120>Hel<00:00.240>lo<00:00.360> <00:00.480>World
-[00:01.000]<00:01.000>这<00:01.120>是<00:01.240>一<00:01.360>首歌
+```bash
+uv run python -m pytest tests/component -q -p no:cacheprovider
 ```
 
-每个字/词前有其开始时间戳（尖括号），每行以行级时间戳（方括号）开头。
+构建与静态检查：
 
-### 逐句 LRC
-
-```lrc
-[00:00.120]Hello World
-[00:01.000]这是一首歌
+```bash
+uv sync --frozen --group dev
+uv lock --check
+uv run ruff check .
+uv run python -m compileall t2l tests
+uv build
 ```
 
-仅包含行级时间戳。
+当前已有 Linux CPython 3.10 functional canonical、真实 WAV/MP3、并发初始化和 Linux x86_64 冷缓存离线安装证据；它们仍不是发布证明。发布计划尚要求 natural non-empty partial 的产品语义、完整资源门禁、macOS 冷安装与双平台聚合、Demucs 离线能力、clean signed provenance、SBOM/attestation 以及恢复/回滚演练。本机或单平台绿色不能替代这些门禁。
 
-## 依赖
+macOS / Python 3.11 的 R3 真实安全运行环境正常对照有独立系统测试入口，耗时约数分钟，不包含在上述 portable/contract 层中：
 
-核心依赖（完整列表见 `requirements.txt`）：
+```bash
+PYTHONDONTWRITEBYTECODE=1 uv run --offline --frozen --no-sync python -m pytest \
+  tests/system/test_security_runtime_identity_r3.py -q -p no:cacheprovider
+```
 
-- **PyTorch / torchaudio** — 音频处理与模型推理
-- **Demucs** — 人声/伴奏分离
-- **librosa** — 音频加载回退方案
-- **fastText** — 非 CJK 文本的语言检测
-- **pypinyin / pykakasi / kroman / cyrtranslit / g2p-en** — 各语言音素化
+该入口串行执行原始 capture/retention 测试与验证器，拒绝 IP 网络和项目/运行环境写入，仅允许在临时证据目录内绑定 Unix socket。日志、产物和前后文件摘要保存在 pytest 临时目录；需要保留路径时可显式指定全新 `--basetemp`。这只验证当前 macOS 正常对照，不代替异常矩阵、其他平台或发布资格；最新状态见 [S18 执行方案](docs/S18_P1_EXECUTABLE_REFACTOR_PLAN.zh-CN.md) 第36.41–36.42节。
 
-> `pykakasi`（日文罗马化）采用 GPL 许可证。如计划以其他许可证使用本项目，请注意此依赖。
+## 从 v1 迁移
 
-## 许可证
+v2 明确不发布旧 `t2l.t2l.process(...)` 散参数接口、五元模型 tuple、隐式 decoder fallback、默认 Demucs，也不自动执行增强 LRC → 标准 LRC 转换。调用方必须迁移到 `AlignmentRequest`/`AlignmentResult`，显式选择输出、decoder、partial 和人声分离策略。
 
-详见 [LICENSE](LICENSE)。
+逐参数迁移方式和退出码处理见 [v1 到 v2 迁移指南](docs/V1_TO_V2_MIGRATION.zh-CN.md)。冻结的 v1 行为边界见[交接文档](docs/AI_REFACTOR_HANDOFF.zh-CN.md)，完整验收门禁见[v2 计划](docs/AI_REFACTOR_V2_EXECUTION_PLAN.zh-CN.md)。
+
+## 许可证与来源
+
+参见 [LICENSE](LICENSE) 和 [BASELINE_PROVENANCE.md](docs/BASELINE_PROVENANCE.md)。部分语言处理依赖和模型资产有各自许可证。仅获准内部生成测试并不等于已验证可再分发；release artifact 必须通过计划中的许可证和 provenance 门禁。
